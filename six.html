@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ocean</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #020d1a;
+  }
+
+  #ocean {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+
+  #stage {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .sprite {
+    position: absolute;
+    width: 72px;
+    height: 72px;
+    image-rendering: pixelated;
+    will-change: transform;
+  }
+
+  .gm-text {
+    position: absolute;
+    font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+    font-size: 13px;
+    color: rgba(255, 230, 120, 0.88);
+    white-space: nowrap;
+    will-change: transform;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #foam {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 120px;
+    background: linear-gradient(to top, rgba(180,220,255,0.18) 0%, transparent 100%);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  #vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    background: radial-gradient(ellipse at center, transparent 40%, rgba(1,8,20,0.55) 100%);
+  }
+
+  /* ── QUIZ ── */
+  #quiz {
+    position: fixed;
+    top: 18px;
+    left: 18px;
+    z-index: 10;
+    width: 310px;
+    background: rgba(2, 12, 28, 0.82);
+    border: 1px solid rgba(80, 170, 255, 0.25);
+    border-radius: 10px;
+    padding: 16px 18px 18px;
+    backdrop-filter: blur(8px);
+    color: #c8e8ff;
+    font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.5);
+  }
+
+  #quiz-progress {
+    font-size: 10px;
+    color: rgba(100,180,255,0.6);
+    margin-bottom: 6px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  #quiz-question {
+    font-size: 13px;
+    line-height: 1.45;
+    margin-bottom: 12px;
+    color: #dff0ff;
+    min-height: 38px;
+  }
+
+  #quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .quiz-opt {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(80,160,255,0.2);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-family: 'Comic Sans MS', 'Comic Sans', cursive;
+    font-size: 12px;
+    color: #b8dcff;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .quiz-opt:hover {
+    background: rgba(80,160,255,0.15);
+    border-color: rgba(80,160,255,0.5);
+  }
+  .quiz-opt.correct {
+    background: rgba(60,220,120,0.18);
+    border-color: rgba(60,220,120,0.6);
+    color: #afffcc;
+  }
+  .quiz-opt.wrong {
+    background: rgba(255,80,80,0.15);
+    border-color: rgba(255,80,80,0.5);
+    color: #ffaaaa;
+  }
+
+  #quiz-feedback {
+    font-size: 11px;
+    margin-top: 8px;
+    min-height: 16px;
+    color: rgba(180,220,255,0.7);
+  }
+</style>
+</head>
+<body>
+
+<canvas id="ocean"></canvas>
+<div id="foam"></div>
+<div id="stage"></div>
+<div id="vignette"></div>
+
+<!-- QUIZ -->
+<div id="quiz">
+  <div id="quiz-progress">Question 1 / 32</div>
+  <div id="quiz-question"></div>
+  <div id="quiz-options"></div>
+  <div id="quiz-feedback"></div>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   OCEAN CANVAS
+══════════════════════════════════════ */
+const canvas = document.getElementById('ocean');
+const ctx = canvas.getContext('2d');
+let W, H;
+function resize() { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+resize();
+window.addEventListener('resize', resize);
+
+const waves = [
+  { amp: 38,  freq: 0.012, speed: 0.0007, phase: 0,    alpha: 0.18, color: '#0a4a8a' },
+  { amp: 28,  freq: 0.018, speed: 0.0011, phase: 1.2,  alpha: 0.22, color: '#0d5fa8' },
+  { amp: 20,  freq: 0.025, speed: 0.0016, phase: 2.5,  alpha: 0.28, color: '#1278c4' },
+  { amp: 14,  freq: 0.035, speed: 0.0024, phase: 0.8,  alpha: 0.32, color: '#2290d8' },
+  { amp: 9,   freq: 0.05,  speed: 0.0035, phase: 3.1,  alpha: 0.20, color: '#40aaee' },
+  { amp: 5,   freq: 0.08,  speed: 0.006,  phase: 1.7,  alpha: 0.14, color: '#7fcfff' },
+];
+
+let t = 0;
+function drawOcean() {
+  t++;
+  const sky = ctx.createLinearGradient(0, 0, 0, H);
+  sky.addColorStop(0,   '#01060f');
+  sky.addColorStop(0.3, '#020d1e');
+  sky.addColorStop(0.6, '#041830');
+  sky.addColorStop(1,   '#071f3a');
+  ctx.fillStyle = sky;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.save();
+  for (let i = 0; i < 80; i++) {
+    const x = ((i * 137.5 + t * 0.05) % W);
+    const y = ((i * 97.3 + Math.sin(i) * 50) % (H * 0.6));
+    const a = 0.15 + 0.15 * Math.sin(t * 0.03 + i);
+    ctx.globalAlpha = a;
+    ctx.fillStyle = '#b8e4ff';
+    ctx.beginPath();
+    ctx.arc(x, y, 0.8, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  for (let wi = 0; wi < waves.length; wi++) {
+    const wv = waves[wi];
+    const yBase = H * 0.45 + wi * (H * 0.055);
+    ctx.save();
+    ctx.globalAlpha = wv.alpha;
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    for (let x = 0; x <= W; x += 3) {
+      const y = yBase + Math.sin(x * wv.freq + t * wv.speed + wv.phase) * wv.amp
+                      + Math.sin(x * wv.freq * 1.7 + t * wv.speed * 0.6 + wv.phase + 1) * wv.amp * 0.4;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    const wg = ctx.createLinearGradient(0, yBase - wv.amp, 0, H);
+    wg.addColorStop(0, wv.color);
+    wg.addColorStop(1, '#010a18');
+    ctx.fillStyle = wg;
+    ctx.fill();
+    ctx.globalAlpha = wv.alpha * 0.6;
+    ctx.strokeStyle = 'rgba(190,230,255,0.7)';
+    ctx.lineWidth = wi === waves.length - 1 ? 1.5 : 0.8;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 3) {
+      const y = yBase + Math.sin(x * wv.freq + t * wv.speed + wv.phase) * wv.amp
+                      + Math.sin(x * wv.freq * 1.7 + t * wv.speed * 0.6 + wv.phase + 1) * wv.amp * 0.4;
+      x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.globalAlpha = 0.04;
+  for (let i = 0; i < 12; i++) {
+    const x = (i / 12) * W + Math.sin(t * 0.002 + i) * 60;
+    const y = H * 0.5 + Math.cos(t * 0.003 + i * 0.7) * H * 0.2;
+    const r = 60 + Math.sin(t * 0.01 + i) * 20;
+    const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+    g.addColorStop(0, 'rgba(100,200,255,0.8)');
+    g.addColorStop(1, 'transparent');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.ellipse(x, y, r, r * 0.3, Math.sin(t * 0.001 + i), 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  requestAnimationFrame(drawOcean);
+}
+drawOcean();
+
+
+/* ══════════════════════════════════════
+   BOUNCER BASE CLASS
+══════════════════════════════════════ */
+const easeInOut = x => x < 0.5 ? 2*x*x : 1 - Math.pow(-2*x+2,2)/2;
+
+class Bouncer {
+  constructor(el, fullScreen) {
+    this.el = el;
+    this.fullScreen = fullScreen; // true = whole screen, false = lower 55%
+    this.vx = (Math.random() * 2.5 + 1.0) * (Math.random() < 0.5 ? 1 : -1);
+    this.vy = (Math.random() * 2.0 + 0.8) * (Math.random() < 0.5 ? 1 : -1);
+    this.flipX = 1; this.targetFlipX = 1;
+    this.flipY = 1; this.targetFlipY = 1;
+    this.tweenProgressX = 1; this.tweenProgressY = 1;
+    this.tweenDurX = 18; this.tweenDurY = 18;
+    this.scaleX = 1; this.scaleY = 1;
+    this.squashTimer = 0; this.squashVec = {x:0,y:0};
+    this.rot = 0;
+    this.rotSpeed = (Math.random() - 0.5) * 0.5;
+    this.w = 72; this.h = 72; // overridden by subclass
+  }
+
+  getBounds() {
+    const W2 = window.innerWidth;
+    const H2 = window.innerHeight;
+    const topBound = this.fullScreen ? 0 : H2 * 0.45;
+    return { left: 0, right: W2 - this.w, top: topBound, bottom: H2 - this.h };
+  }
+
+  startFlipX() {
+    if (this.tweenProgressX < 1) return;
+    this.tweenProgressX = 0;
+    this.tweenDurX = 16 + Math.random() * 10;
+    this.targetFlipX = -this.flipX;
+  }
+  startFlipY() {
+    if (this.tweenProgressY < 1) return;
+    this.tweenProgressY = 0;
+    this.tweenDurY = 16 + Math.random() * 10;
+    this.targetFlipY = -this.flipY;
+  }
+
+  squash(axis) {
+    this.squashTimer = 12;
+    this.squashVec = axis === 'x' ? {x:-0.5,y:0.5} : {x:0.5,y:-0.5};
+  }
+
+  update() {
+    const b = this.getBounds();
+    this.x += this.vx;
+    this.y += this.vy;
+
+    if (this.x <= b.left)  { this.x = b.left;  this.vx =  Math.abs(this.vx); this.startFlipX(); this.squash('x'); }
+    if (this.x >= b.right) { this.x = b.right; this.vx = -Math.abs(this.vx); this.startFlipX(); this.squash('x'); }
+    if (this.y <= b.top)   { this.y = b.top;   this.vy =  Math.abs(this.vy); this.startFlipY(); this.squash('y'); }
+    if (this.y >= b.bottom){ this.y = b.bottom; this.vy = -Math.abs(this.vy); this.startFlipY(); this.squash('y'); }
+
+    if (this.tweenProgressX < 1) {
+      this.tweenProgressX = Math.min(1, this.tweenProgressX + 1 / this.tweenDurX);
+      const e = easeInOut(this.tweenProgressX);
+      this.flipX = this.flipX + (this.targetFlipX - this.flipX) * e;
+      if (this.tweenProgressX >= 1) this.flipX = this.targetFlipX;
+    }
+    if (this.tweenProgressY < 1) {
+      this.tweenProgressY = Math.min(1, this.tweenProgressY + 1 / this.tweenDurY);
+      const e = easeInOut(this.tweenProgressY);
+      this.flipY = this.flipY + (this.targetFlipY - this.flipY) * e;
+      if (this.tweenProgressY >= 1) this.flipY = this.targetFlipY;
+    }
+
+    if (this.squashTimer > 0) {
+      this.squashTimer--;
+      const p = this.squashTimer / 12;
+      this.scaleX = 1 + this.squashVec.x * p * 0.35;
+      this.scaleY = 1 + this.squashVec.y * p * 0.35;
+    } else {
+      this.scaleX += (1 - this.scaleX) * 0.18;
+      this.scaleY += (1 - this.scaleY) * 0.18;
+    }
+
+    this.rot += this.rotSpeed;
+    if (Math.abs(this.rotSpeed) < 0.04) this.rotSpeed = (Math.random() - 0.5) * 0.3;
+    this.rotSpeed *= 0.996;
+
+    this.el.style.transform =
+      `translate(${this.x}px,${this.y}px) rotate(${this.rot}deg) scale(${this.flipX*this.scaleX},${this.flipY*this.scaleY})`;
+    this.el.style.transformOrigin = '50% 50%';
+  }
+}
+
+
+/* ══════════════════════════════════════
+   SPRITE BOUNCERS (six.png)
+══════════════════════════════════════ */
+const stage = document.getElementById('stage');
+
+class SpriteBouncer extends Bouncer {
+  constructor() {
+    const el = document.createElement('img');
+    el.className = 'sprite';
+    el.src = 'images/six.png';
+    el.draggable = false;
+    stage.appendChild(el);
+    super(el, false);
+    this.w = 72; this.h = 72;
+    const b = this.getBounds();
+    this.x = b.left + Math.random() * (b.right - b.left);
+    this.y = b.top  + Math.random() * (b.bottom - b.top);
+  }
+}
+
+const sprites = Array.from({length: 14}, () => new SpriteBouncer());
+
+
+/* ══════════════════════════════════════
+   GOOD MORNING TEXT BOUNCERS
+══════════════════════════════════════ */
+const gmVariants = [
+  'good morning', 'Good Morning', 'GOOD MORNING', 'good morning!',
+  'Good Morning!', 'good morning :)', 'gooood morning', 'good morning~',
+];
+
+class TextBouncer extends Bouncer {
+  constructor() {
+    const el = document.createElement('div');
+    el.className = 'gm-text';
+    el.textContent = gmVariants[Math.floor(Math.random() * gmVariants.length)];
+    // vary size a bit
+    const sz = 10 + Math.floor(Math.random() * 8);
+    el.style.fontSize = sz + 'px';
+    stage.appendChild(el);
+    super(el, true);
+    // measure after append
+    this.w = el.offsetWidth || 90;
+    this.h = el.offsetHeight || 16;
+    this.x = Math.random() * (window.innerWidth  - this.w);
+    this.y = Math.random() * (window.innerHeight - this.h);
+    // random tint
+    const hues = ['rgba(255,230,100,0.9)','rgba(180,255,200,0.85)','rgba(255,180,220,0.85)',
+                  'rgba(160,220,255,0.88)','rgba(255,200,140,0.9)','rgba(220,180,255,0.88)'];
+    el.style.color = hues[Math.floor(Math.random() * hues.length)];
+  }
+}
+
+const gmBouncers = Array.from({length: 28}, () => new TextBouncer());
+
+
+/* ══════════════════════════════════════
+   ANIMATION LOOP
+══════════════════════════════════════ */
+function animateAll() {
+  sprites.forEach(b => b.update());
+  gmBouncers.forEach(b => b.update());
+  requestAnimationFrame(animateAll);
+}
+animateAll();
+
+
+/* ══════════════════════════════════════
+   QUIZ
+══════════════════════════════════════ */
+const CORRECT_ANSWER = 'Blue';
+
+const questions = [
+  { q: "What colour is the sky on a clear day?",         opts: ["Red","Blue","Green","Yellow"] },
+  { q: "Which colour do you see when you look up outside during daylight?", opts: ["Orange","Purple","Blue","Pink"] },
+  { q: "On a cloudless afternoon, what is the colour of the sky?", opts: ["Blue","Brown","White","Teal"] },
+  { q: "The sky, when free of clouds, appears what colour?", opts: ["Grey","Blue","Beige","Crimson"] },
+  { q: "Name the colour of a clear daytime sky.",         opts: ["Silver","Blue","Gold","Maroon"] },
+  { q: "What colour does the sky take on during a clear day?", opts: ["Blue","Black","Lime","Violet"] },
+  { q: "During a sunny day with no clouds, the sky looks…?", opts: ["Magenta","Amber","Blue","Ivory"] },
+  { q: "A cloudless sky in the daytime is typically what colour?", opts: ["Coral","Indigo","Blue","Rust"] },
+  { q: "If there are no clouds, what colour is visible above you?", opts: ["Tan","Blue","Olive","Peach"] },
+  { q: "What is the usual colour of the sky on a fine day?", opts: ["Jade","Blue","Scarlet","Taupe"] },
+  { q: "On a bright, clear day, which colour fills the sky?", opts: ["Blue","Navy","Cyan","Azure"] },
+  { q: "What colour would you report if asked to describe a clear sky?", opts: ["Ecru","Blue","Khaki","Fuchsia"] },
+  { q: "Complete the phrase: 'clear blue ___' — what colour precedes sky?", opts: ["Red","Blue","Green","Yellow"] },
+  { q: "When the sun is high and clouds are absent, the sky shows which colour?", opts: ["Charcoal","Blue","Salmon","Cream"] },
+  { q: "If you look straight up outdoors on a clear day, what colour greets you?", opts: ["Blue","Sepia","Mint","Lilac"] },
+  { q: "Which of these best describes the colour of a clear daytime sky?", opts: ["Mustard","Blue","Burgundy","Slate"] },
+  { q: "A painter asked to depict a fair-weather sky would reach for which colour?", opts: ["Ochre","Blue","Umber","Rose"] },
+  { q: "What single colour is most associated with a clear, fair sky?", opts: ["Copper","Lemon","Blue","Plum"] },
+  { q: "The sky without clouds or haze most closely resembles which colour?", opts: ["Blue","Sienna","Forest","Sand"] },
+  { q: "Which colour is the sky on a day without clouds?", opts: ["Mauve","Blue","Turquoise","Cobalt"] },
+  { q: "On a perfect weather day, the sky above is described as what colour?", opts: ["Ebony","Blue","Jade","Carmine"] },
+  { q: "In everyday speech, we say the sky is what colour when it is clear?", opts: ["Blue","Onyx","Sage","Blush"] },
+  { q: "What is the sky's colour during a cloudless day?",  opts: ["Buff","Blue","Puce","Celadon"] },
+  { q: "Which hue best describes an unobstructed daytime sky?", opts: ["Blue","Umber","Flax","Auburn"] },
+  { q: "Pick the correct colour of a fair-weather sky.",    opts: ["Cinnabar","Dun","Blue","Wisteria"] },
+  { q: "What colour is overhead when the weather is clear and sunny?", opts: ["Ecru","Taupe","Buff","Blue"] },
+  { q: "On a day with zero cloud cover, the sky appears…?", opts: ["Bisque","Gamboge","Blue","Feldgrau"] },
+  { q: "Which answer correctly states the colour of a clear sky?", opts: ["Blue","Puce","Bole","Smalt"] },
+  { q: "If asked in a quiz: what colour is a cloudless daytime sky?", opts: ["Tyrian","Blue","Nacre","Minium"] },
+  { q: "The daytime sky, when perfectly clear, is what colour?", opts: ["Vermeil","Cerise","Blue","Glaucous"] },
+  { q: "Which of the following is the correct colour of a clear blue sky?", opts: ["Incarnadine","Blue","Falu","Smaragd"] },
+  { q: "Final question: what colour is the sky when there are no clouds?", opts: ["Zaffre","Blue","Filemot","Watchet"] },
+];
+
+// Shuffle the options for each question (keeping the correct answer somewhere random)
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const shuffledQuestions = questions.map(q => ({ q: q.q, opts: shuffle(q.opts) }));
+
+let currentQ = 0;
+let locked = false;
+
+const progressEl  = document.getElementById('quiz-progress');
+const questionEl  = document.getElementById('quiz-question');
+const optionsEl   = document.getElementById('quiz-options');
+const feedbackEl  = document.getElementById('quiz-feedback');
+
+function loadQuestion(idx) {
+  locked = false;
+  feedbackEl.textContent = '';
+  const data = shuffledQuestions[idx];
+  progressEl.textContent = `Question ${idx + 1} / 32`;
+  questionEl.textContent = data.q;
+  optionsEl.innerHTML = '';
+  data.opts.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'quiz-opt';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => handleAnswer(btn, opt));
+    optionsEl.appendChild(btn);
+  });
+}
+
+function handleAnswer(btn, chosen) {
+  if (locked) return;
+  locked = true;
+
+  const isCorrect = chosen === CORRECT_ANSWER;
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    feedbackEl.textContent = '✓ Correct!';
+    feedbackEl.style.color = '#7fffaa';
+    setTimeout(() => {
+      currentQ++;
+      if (currentQ >= 32) {
+        window.location.href = 'foot.html';
+      } else {
+        loadQuestion(currentQ);
+      }
+    }, 600);
+  } else {
+    btn.classList.add('wrong');
+    feedbackEl.textContent = '✗ Wrong — try again.';
+    feedbackEl.style.color = '#ff9999';
+    setTimeout(() => {
+      btn.classList.remove('wrong');
+      locked = false;
+      feedbackEl.textContent = '';
+    }, 700);
+  }
+}
+
+loadQuestion(0);
+</script>
+</body>
+</html>

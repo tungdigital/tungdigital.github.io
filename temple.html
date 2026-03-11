@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Temple</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f0e8d8;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+  }
+
+  body:active { cursor: grabbing; }
+
+  canvas {
+    display: block;
+    image-rendering: pixelated;
+  }
+
+  #hint {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: #b5a48a;
+    opacity: 0;
+    animation: fadeHint 4s ease forwards;
+    pointer-events: none;
+  }
+
+  @keyframes fadeHint {
+    0%   { opacity: 0; }
+    20%  { opacity: 1; }
+    80%  { opacity: 1; }
+    100% { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<script>
+// ─── Audio ───────────────────────────────────────────────────────────────────
+const audio = new Audio('audio/good.mp3');
+audio.loop = true;
+audio.volume = 0.6;
+const tryPlay = () => { audio.play().catch(() => {}); };
+document.addEventListener('pointerdown', tryPlay, { once: true });
+document.addEventListener('keydown',     tryPlay, { once: true });
+tryPlay();
+
+// ─── Canvas setup ────────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const DPR    = Math.min(window.devicePixelRatio || 1, 2);
+const W = 800, H = 800;
+canvas.width  = W * DPR;
+canvas.height = H * DPR;
+canvas.style.width  = W + 'px';
+canvas.style.height = H + 'px';
+ctx.scale(DPR, DPR);
+
+// ─── Pyramid geometry (unit pyramid, apex up) ─────────────────────────────────
+// vertices: apex, 4 base corners
+const BASE = 1.0;
+const APEX_H = 1.4;
+const rawVerts = [
+  [ 0,       APEX_H,  0      ],  // 0 apex
+  [-BASE/2,  0,      -BASE/2 ],  // 1 base BL
+  [ BASE/2,  0,      -BASE/2 ],  // 2 base BR
+  [ BASE/2,  0,       BASE/2 ],  // 3 base FR
+  [-BASE/2,  0,       BASE/2 ],  // 4 base FL
+];
+
+// faces: [indices, face-id for color]
+const faces = [
+  { verts: [0, 1, 2], id: 'back'  },
+  { verts: [0, 2, 3], id: 'right' },
+  { verts: [0, 3, 4], id: 'front' },
+  { verts: [0, 4, 1], id: 'left'  },
+  { verts: [1, 4, 3, 2], id: 'base'  },
+];
+
+// ─── Pixel-art palette ────────────────────────────────────────────────────────
+const COLORS = {
+  front:  { fill: '#d4a843', stroke: '#b8892a' },  // warm gold
+  right:  { fill: '#e8c26a', stroke: '#c9a040' },  // light gold
+  back:   { fill: '#a07830', stroke: '#8a6320' },  // deep amber
+  left:   { fill: '#b88c38', stroke: '#9a7220' },  // mid amber
+  base:   { fill: '#6b4c1e', stroke: '#4e3610' },  // dark brown
+  edge:   '#3a2810',
+};
+
+// Pixel-art highlight/shadow colors
+const PIXEL_HIGHLIGHTS = {
+  front:  ['#f0c060', '#d4a843', '#b88030'],
+  right:  ['#ffd880', '#e8c26a', '#c9a040'],
+  back:   ['#c09040', '#a07830', '#7a5820'],
+  left:   ['#d4a050', '#b88c38', '#9a7220'],
+};
+
+// ─── 3D math ─────────────────────────────────────────────────────────────────
+function rotX(v, a) {
+  const [x,y,z] = v, c=Math.cos(a), s=Math.sin(a);
+  return [x, y*c - z*s, y*s + z*c];
+}
+function rotY(v, a) {
+  const [x,y,z] = v, c=Math.cos(a), s=Math.sin(a);
+  return [x*c + z*s, y, -x*s + z*c];
+}
+function rotZ(v, a) {
+  const [x,y,z] = v, c=Math.cos(a), s=Math.sin(a);
+  return [x*c - y*s, x*s + y*c, z];
+}
+function project(v, scale, cx, cy) {
+  // simple orthographic with slight isometric tilt
+  const ISO = Math.PI / 6;
+  const [x,y,z] = v;
+  return [
+    cx + (x - z) * Math.cos(ISO) * scale,
+    cy - y * scale + (x + z) * Math.sin(ISO) * scale * 0.5
+  ];
+}
+
+// ─── Rotation state ───────────────────────────────────────────────────────────
+let rx = 0.28, ry = 0.62, rz = 0;
+
+// ─── Interaction ──────────────────────────────────────────────────────────────
+let dragging = false, lastX = 0, lastY = 0;
+
+canvas.addEventListener('pointerdown', e => {
+  dragging = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+  ry += dx * 0.008;
+  rx += dy * 0.008;
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
+canvas.addEventListener('pointerup',   () => { dragging = false; });
+canvas.addEventListener('pointercancel', () => { dragging = false; });
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  rz += e.deltaY * 0.003;
+}, { passive: false });
+
+// Touch pinch / two-finger rotate on z
+let lastTouch2Angle = null;
+canvas.addEventListener('touchstart', e => {
+  if (e.touches.length === 2) {
+    const dx = e.touches[1].clientX - e.touches[0].clientX;
+    const dy = e.touches[1].clientY - e.touches[0].clientY;
+    lastTouch2Angle = Math.atan2(dy, dx);
+  }
+}, { passive: true });
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 2 && lastTouch2Angle !== null) {
+    const dx = e.touches[1].clientX - e.touches[0].clientX;
+    const dy = e.touches[1].clientY - e.touches[0].clientY;
+    const angle = Math.atan2(dy, dx);
+    rz += angle - lastTouch2Angle;
+    lastTouch2Angle = angle;
+  }
+}, { passive: true });
+canvas.addEventListener('touchend', () => { lastTouch2Angle = null; }, { passive: true });
+
+// ─── Normal calculation ───────────────────────────────────────────────────────
+function faceNormal(pts3d) {
+  const a = pts3d[0], b = pts3d[1], c = pts3d[2];
+  const ab = [b[0]-a[0], b[1]-a[1], b[2]-a[2]];
+  const ac = [c[0]-a[0], c[1]-a[1], c[2]-a[2]];
+  return [
+    ab[1]*ac[2] - ab[2]*ac[1],
+    ab[2]*ac[0] - ab[0]*ac[2],
+    ab[0]*ac[1] - ab[1]*ac[0],
+  ];
+}
+function dot(a, b) { return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]; }
+
+// ─── Pixel-art dithering pattern on face ─────────────────────────────────────
+function drawPixelFace(ctx, pts2d, colors) {
+  // clip to face, then draw banded rows for pixel art look
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(pts2d[0][0], pts2d[0][1]);
+  for (let i = 1; i < pts2d.length; i++) ctx.lineTo(pts2d[i][0], pts2d[i][1]);
+  ctx.closePath();
+  ctx.clip();
+
+  // fill base
+  ctx.fillStyle = colors[1];
+  ctx.fill();
+
+  // draw pixel-art scanlines for texture
+  const PIXEL = 6;
+  // bounding box
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (const [px, py] of pts2d) {
+    if (px < minX) minX = px; if (px > maxX) maxX = px;
+    if (py < minY) minY = py; if (py > maxY) maxY = py;
+  }
+  minX = Math.floor(minX / PIXEL) * PIXEL;
+  minY = Math.floor(minY / PIXEL) * PIXEL;
+
+  const totalH = maxY - minY;
+  for (let py = minY; py < maxY; py += PIXEL) {
+    const t = (py - minY) / totalH;
+    // pick color band
+    let col;
+    if (t < 0.25)      col = colors[0];
+    else if (t < 0.6)  col = colors[1];
+    else               col = colors[2];
+
+    for (let px = minX; px < maxX; px += PIXEL) {
+      // checkerboard shimmer on highlight zone
+      const odd = ((Math.floor(px/PIXEL) + Math.floor(py/PIXEL)) % 2 === 0);
+      if (t < 0.12 && odd) {
+        ctx.fillStyle = colors[0];
+      } else {
+        ctx.fillStyle = col;
+      }
+      ctx.fillRect(px, py, PIXEL, PIXEL);
+    }
+  }
+  ctx.restore();
+}
+
+// ─── Draw ─────────────────────────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, W, H);
+
+  // Beige background (matches body)
+  ctx.fillStyle = '#f0e8d8';
+  ctx.fillRect(0, 0, W, H);
+
+  const SCALE = 180;
+  const CX = W / 2, CY = H / 2 + 30;
+
+  // Transform all vertices
+  const transformed = rawVerts.map(v => {
+    let p = rotX(v, rx);
+    p = rotY(p, ry);
+    p = rotZ(p, rz);
+    return p;
+  });
+
+  // Compute face data for sorting & culling
+  const faceData = faces.map(f => {
+    const pts3d = f.verts.map(i => transformed[i]);
+    const center = pts3d.reduce((a, b) => [a[0]+b[0], a[1]+b[1], a[2]+b[2]], [0,0,0])
+                        .map(v => v / pts3d.length);
+    const normal = faceNormal(pts3d);
+    const cam = [0, 0, -1]; // camera looks along -Z
+    const vis = dot(normal, cam);
+    const pts2d = pts3d.map(p => project(p, SCALE, CX, CY));
+    return { ...f, pts3d, pts2d, center, normal, vis };
+  });
+
+  // Painter's algorithm: sort back-to-front by Z
+  faceData.sort((a, b) => b.center[2] - a.center[2]);
+
+  for (const face of faceData) {
+    // Backface culling (skip base which is always visible)
+    if (face.id !== 'base' && face.vis > 0) continue;
+
+    const { pts2d, id } = face;
+    const col = COLORS[id];
+    const pixCols = PIXEL_HIGHLIGHTS[id] || [col.fill, col.fill, col.stroke];
+
+    if (id === 'base') {
+      // solid dark base, no pixel dither needed
+      ctx.beginPath();
+      ctx.moveTo(pts2d[0][0], pts2d[0][1]);
+      for (let i = 1; i < pts2d.length; i++) ctx.lineTo(pts2d[i][0], pts2d[i][1]);
+      ctx.closePath();
+      ctx.fillStyle = col.fill;
+      ctx.fill();
+      ctx.strokeStyle = COLORS.edge;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    } else {
+      drawPixelFace(ctx, pts2d, pixCols);
+
+      // edge outline
+      ctx.beginPath();
+      ctx.moveTo(pts2d[0][0], pts2d[0][1]);
+      for (let i = 1; i < pts2d.length; i++) ctx.lineTo(pts2d[i][0], pts2d[i][1]);
+      ctx.closePath();
+      ctx.strokeStyle = COLORS.edge;
+      ctx.lineWidth = 2.5;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
+  }
+}
+
+// ─── Loop ─────────────────────────────────────────────────────────────────────
+function loop() {
+  draw();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>

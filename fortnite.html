@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<title>for</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    text-align: center;
+}
+
+img {
+    max-width: 60vw;
+    max-height: 60vh;
+}
+
+button {
+    margin-top: 30px;
+    padding: 14px 40px;
+    font-size: 20px;
+    background: #0b0b0b;
+    color: #e00000;
+    border: 2px solid #300000;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease, transform 0.2s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px rgba(255,0,0,0.6), inset 0 0 10px rgba(255,0,0,0.3);
+}
+
+button.show {
+    opacity: 1;
+    pointer-events: auto;
+    animation: flicker 2s infinite;
+}
+
+@keyframes flicker {
+    0% { opacity: 1; }
+    5% { opacity: 0.4; }
+    10% { opacity: 1; }
+    15% { opacity: 0.3; }
+    20% { opacity: 1; }
+    100% { opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <img src="images/theidea.png" alt="The Idea">
+    <br>
+    <button id="understandBtn" onclick="goNext()">UNDERSTAND</button>
+</div>
+
+<audio id="bgAudio" src="audio/nomore.mp3" loop autoplay></audio>
+
+<script>
+setTimeout(function() {
+    document.getElementById("understandBtn").classList.add("show");
+}, 20000);
+
+const audio = document.getElementById("bgAudio");
+audio.volume = 0.7;
+
+document.body.addEventListener("click", function() {
+    audio.play();
+}, { once: true });
+
+function goNext() {
+    window.location.href = "1more.html";
+}
+</script>
+
+</body>
+</html>

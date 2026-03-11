@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<title>the cave</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; }
+  canvas { display: block; }
+  #overlay {
+    position: fixed; inset: 0; background: #000; opacity: 1;
+    pointer-events: none; transition: opacity 2.5s ease; z-index: 100;
+  }
+  #overlay.fadein  { opacity: 0; }
+  #overlay.fadeout { opacity: 1; }
+  #hud {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    color: #444; font-family: 'Courier New', monospace; font-size: 10px;
+    text-align: center; pointer-events: none; letter-spacing: 3px; opacity: 0.6; line-height: 2;
+  }
+  #crosshair {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    pointer-events: none; z-index: 50; width: 0; height: 0;
+  }
+  #crosshair::before, #crosshair::after {
+    content: ''; position: absolute; background: rgba(255,255,255,0.2);
+  }
+  #crosshair::before { width: 1px; height: 8px; top: -4px; left: 0; }
+  #crosshair::after  { width: 8px; height: 1px; left: -4px; top: 0; }
+
+  /* WARNING SCREEN */
+  #warning-screen {
+    position: fixed; inset: 0; background: #000; z-index: 9999;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Courier New', monospace;
+    transition: opacity 1.8s ease;
+  }
+  #warning-screen.fade-out { opacity: 0; pointer-events: none; }
+  .warn-box {
+    max-width: 500px; width: 90%;
+    color: #aaa;
+    font-size: 13px;
+    line-height: 1.9;
+  }
+  .warn-box p { margin-bottom: 1.2em; }
+  .warn-box .dim { color: #444; font-size: 11px; }
+  .warn-box .hl { color: #ddd; }
+  #play-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: #666;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+  }
+  #play-btn:hover { color: #ccc; }
+  #play-btn.visible { display: inline; animation: btnfadein 1s ease both; }
+  @keyframes btnfadein {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  .blink { animation: blink 1s step-end infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+</style>
+</head>
+<body>
+<audio id="bgm" src="audio/echus.mp3" loop></audio>
+
+<div id="warning-screen">
+  <div class="warn-box">
+    <p class="dim">// found on old drive, ~2002. belonged to "mongleville llc". no idea who they were.</p>
+    <p>file is <span class="hl">unstable</span>. parts of it are missing.<br>
+    it may not behave the way it was supposed to.</p>
+    <p>run it anyway?</p>
+    <p><button id="play-btn" onclick="startGame()">[ yes, continue ]</button><span class="blink" style="color:#444"> _</span></p>
+  </div>
+</div>
+
+<div id="overlay"></div>
+<div id="crosshair"></div>
+<div id="hud">WASD — MOVE &nbsp;|&nbsp; MOUSE — LOOK &nbsp;|&nbsp; CLICK TO LOCK CURSOR</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+'use strict';
+const overlay = document.getElementById('overlay');
+const bgm = document.getElementById('bgm');
+const warningScreen = document.getElementById('warning-screen');
+const playBtn = document.getElementById('play-btn');
+
+let gameStarted = false;
+
+// Show play button after 3 seconds
+setTimeout(() => { playBtn.classList.add('visible'); }, 3000);
+
+function startGame() {
+  gameStarted = true;
+  // Start music
+  bgm.play().catch(() => {});
+  // Fade out warning screen
+  warningScreen.classList.add('fade-out');
+  // After warning fades, remove it and fade in the game
+  setTimeout(() => {
+    warningScreen.style.display = 'none';
+    setTimeout(() => overlay.classList.add('fadein'), 100);
+  }, 1900);
+}
+
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+scene.fog = new THREE.FogExp2(0x000000, 0.052);
+
+const camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.04, 80);
+scene.add(camera);
+
+// Flashlight: PointLight parented to camera radiates in all directions,
+// so no geometry can block it by being "behind" the light source.
+// A second tighter point gives the "hot centre" beam feel.
+const flashMain = new THREE.PointLight(0xfff5cc, 3.2, 20, 1.6);
+flashMain.position.set(0, 0, 0);
+camera.add(flashMain);
+const flashFill = new THREE.PointLight(0xffe8aa, 1.0, 7, 2.0);
+flashFill.position.set(0, 0, -0.5);
+camera.add(flashFill);
+scene.add(new THREE.AmbientLight(0x0a0906, 1));
+
+const mA = new THREE.MeshLambertMaterial({ color: 0x1c1610 });
+const mB = new THREE.MeshLambertMaterial({ color: 0x110e0a });
+const mC = new THREE.MeshLambertMaterial({ color: 0x241d15 });
+const RMATS = [mA, mB, mC];
+
+// Hand + flashlight
+const handGroup = new THREE.Group();
+const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.028,0.19,8), new THREE.MeshLambertMaterial({color:0x1c1c1c}));
+barrel.rotation.x = Math.PI/2; barrel.position.set(0,0,-0.09); handGroup.add(barrel);
+const flHead = new THREE.Mesh(new THREE.CylinderGeometry(0.037,0.025,0.04,8), new THREE.MeshLambertMaterial({color:0x111111}));
+flHead.rotation.x = Math.PI/2; flHead.position.set(0,0,-0.21); handGroup.add(flHead);
+const lens = new THREE.Mesh(new THREE.CircleGeometry(0.029,10), new THREE.MeshBasicMaterial({color:0xffffee}));
+lens.position.set(0,0,-0.232); handGroup.add(lens);
+const handMat = new THREE.MeshLambertMaterial({color:0xb07040});
+const palm = new THREE.Mesh(new THREE.BoxGeometry(0.07,0.038,0.105), handMat);
+palm.position.set(0,-0.028,-0.045); handGroup.add(palm);
+for(let f=0;f<4;f++){
+  const fg = new THREE.Mesh(new THREE.CylinderGeometry(0.0075,0.0075,0.058,5), handMat);
+  fg.rotation.x=-0.32; fg.position.set(-0.025+f*0.017,-0.020,-0.093); handGroup.add(fg);
+}
+const thumb = new THREE.Mesh(new THREE.CylinderGeometry(0.009,0.009,0.050,5), handMat);
+thumb.rotation.set(0.22,0,0.62); thumb.position.set(-0.043,-0.019,-0.050); handGroup.add(thumb);
+handGroup.position.set(0.165,-0.165,-0.26); handGroup.rotation.set(0.10,0.07,-0.06);
+camera.add(handGroup);
+
+// SEGMENTS
+// axis='z': runs along Z, x0=centerX, z0=startZ, len=Z-length
+// axis='x': runs along X, z0=centerZ, x0=startX, len=X-length
+// yFloor = floor Y at start end; dy = total rise start->end
+const TW=3.6, TH=3.2, WT=0.5;
+const SEGS=[];
+function addSeg(axis,x0,z0,len,yFloor,W,H,dy){
+  W=W!=null?W:TW; H=H!=null?H:TH; dy=dy||0;
+  let xMin,xMax,zMin,zMax;
+  if(axis==='z'){ xMin=x0-W/2; xMax=x0+W/2; zMin=Math.min(z0,z0+len); zMax=Math.max(z0,z0+len); }
+  else          { xMin=Math.min(x0,x0+len); xMax=Math.max(x0,x0+len); zMin=z0-W/2; zMax=z0+W/2; }
+  SEGS.push({axis,x0,z0,len,yFloor,W,H,dy,xMin,xMax,zMin,zMax});
+}
+
+// THE PATH - long zigzag cave
+addSeg('z',  0,  0, 16,  0.0, TW,   TH,   0.0);
+addSeg('z',  0, 16, 12,  0.0, TW,   TH,  -1.8);
+addSeg('z',  0, 28,  8, -1.8, TW,   TH,   0.0);
+addSeg('x',  0, 36,-20, -1.8, TW,   TH,   0.0);
+addSeg('z',-20, 36, 14, -1.8, TW,   TH,  -2.0);
+addSeg('z',-20, 50, 10, -3.8, TW,   TH,   0.0);
+addSeg('x',-20, 60, 22, -3.8, TW+1, TH+1, 0.0);
+addSeg('z',  2, 60, 14, -3.8, TW,   TH,  -2.4);
+addSeg('z',  2, 74,  8, -6.2, TW,   TH,   0.0);
+addSeg('x',  2, 82,-18, -6.2, TW,   TH,   0.0);
+addSeg('z',-16, 82, 16, -6.2, TW,   TH,   2.6);
+addSeg('z',-16, 98, 10, -3.6, TW,   TH,   0.0);
+addSeg('x',-16,108, 22, -3.6, TW,   TH,   0.0);
+addSeg('z',  6,108, 16, -3.6, TW,   TH,  -2.0);
+addSeg('z',  6,124,  8, -5.6, TW,   TH,   0.0);
+addSeg('x',  6,132,-24, -5.6, TW,   TH,   0.0);
+addSeg('z',-18,132, 14, -5.6, TW,   TH,   2.0);
+addSeg('z',-18,146, 12, -3.6, TW,   TH,   0.0);
+addSeg('x',-18,158, 24, -3.6, TW,   TH,   0.0);
+addSeg('z',  6,158, 14, -3.6, TW,   TH,  -2.6);
+addSeg('z',  6,172,  8, -6.2, TW,   TH,   0.0);
+addSeg('x',  6,180,-22, -6.2, TW,   TH,   0.0);
+addSeg('z',-16,180, 16, -6.2, TW,   TH,   2.2);
+addSeg('z',-16,196, 10, -4.0, TW,   TH,   0.0);
+addSeg('x',-16,206, 22, -4.0, TW,   TH,   0.0);
+addSeg('z',  6,206, 14, -4.0, TW,   TH,  -2.2);
+addSeg('z',  6,220,  8, -6.2, TW,   TH,   0.0);
+addSeg('x',  6,228,-20, -6.2, TW,   TH,   0.0);
+addSeg('z',-14,228, 14, -6.2, TW,   TH,   2.4);
+addSeg('z',-14,242, 10, -3.8, TW,   TH,   0.0);
+addSeg('x',-14,252, 20, -3.8, TW,   TH,   0.0);
+addSeg('z',  6,252, 18, -3.8, TW,   TH,  -2.4);
+addSeg('z',  6,270, 10, -6.2, TW,   TH,   0.0);
+
+const FCX=6, FZ0=280, FW=22, FD=28, FH=10, FF=-6.2;
+addSeg('z',FCX,FZ0,FD,FF,FW,FH,0); // final room
+
+// BUILD GEOMETRY
+function mkBox(w,h,d,mat,x,y,z){
+  const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);
+  m.position.set(x,y,z); scene.add(m); return m;
+}
+
+// For each junction, compute how much to trim from the end of seg[i] and start of seg[i+1]
+// The z-corridor wall must stop at jz - Wx/2 (inner face of x-corridor)
+// The x-corridor wall must start at jx + sign*Wz/2 (inner face of z-corridor)
+const wallEndTrim   = new Array(SEGS.length).fill(0); // trim from end of last slab
+const wallStartTrim = new Array(SEGS.length).fill(0); // trim from start of first slab
+for(let i=0;i<SEGS.length-1;i++){
+  const a=SEGS[i], b=SEGS[i+1];
+  if(a.axis===b.axis) continue;
+  const zSeg=(a.axis==='z')?a:b;
+  const xSeg=(a.axis==='z')?b:a;
+  // z-seg wall must stop Wx/2 before its end (so it doesn't enter x-corridor open space)
+  wallEndTrim[a.axis==='z'?i:i+1]   = xSeg.W/2;
+  // x-seg wall must start Wz/2 after its start (so it doesn't enter z-corridor open space)
+  wallStartTrim[a.axis==='z'?i+1:i] = zSeg.W/2;
+}
+
+SEGS.forEach((s,idx)=>{
+  const {axis,x0,z0,len,yFloor,W,H,dy}=s;
+  const m1=RMATS[idx%3], m2=RMATS[(idx+1)%3], m3=RMATS[(idx+2)%3];
+  const absLen=Math.abs(len), signLen=Math.sign(len);
+  const SLABS=Math.max(1,Math.ceil(absLen/3.5));
+  const slabL=absLen/SLABS;
+
+  for(let si=0;si<SLABS;si++){
+    const tc=(si+.5)/SLABS;
+    const yMid=yFloor+dy*tc;
+    const slabDy=dy/SLABS;
+    const isFirst=(si===0), isLast=(si===SLABS-1);
+
+    const SL = slabL + 0.08;
+
+    const cx=(axis==='z')?x0:x0+signLen*(si+.5)*slabL;
+    const cz=(axis==='z')?z0+signLen*(si+.5)*slabL:z0;
+
+    // Floor
+    const fgeo=(axis==='z')?new THREE.BoxGeometry(W,WT,SL):new THREE.BoxGeometry(SL,WT,W);
+    const fm=new THREE.Mesh(fgeo,m1);
+    fm.position.set(cx,yMid-H/2-WT/2,cz);
+    if(Math.abs(slabDy)>0.01){
+      const ang=Math.atan2(slabDy,slabL);
+      if(axis==='z') fm.rotation.x=-ang*signLen; else fm.rotation.z=ang*signLen;
+    }
+    scene.add(fm);
+
+    // Ceiling
+    const cgeo=(axis==='z')?new THREE.BoxGeometry(W+0.3,WT,SL):new THREE.BoxGeometry(SL,WT,W+0.3);
+    const cm=new THREE.Mesh(cgeo,m2);
+    cm.position.set(cx,yMid+H/2+WT/2,cz); scene.add(cm);
+
+    // Walls — trimmed at junction boundaries
+    const wH=H+Math.abs(slabDy)+WT*2+0.5;
+    // Compute trimmed wall length and shifted centre
+    let wallSL = SL;
+    let wallCx = cx, wallCz = cz;
+    if(isLast && wallEndTrim[idx] > 0){
+      const trim = wallEndTrim[idx];
+      wallSL = SL - trim;
+      // shift centre away from the junction end by trim/2
+      if(axis==='z') wallCz = cz - signLen*trim/2;
+      else           wallCx = cx - signLen*trim/2;
+    }
+    if(isFirst && wallStartTrim[idx] > 0){
+      const trim = wallStartTrim[idx];
+      wallSL = SL - trim;
+      // shift centre away from the junction start by trim/2
+      if(axis==='z') wallCz = cz + signLen*trim/2;
+      else           wallCx = cx + signLen*trim/2;
+    }
+    if(wallSL <= 0) continue; // skip degenerate slabs
+
+    if(axis==='z'){
+      mkBox(WT,wH,wallSL,m3,wallCx-W/2-WT/2,yMid,wallCz);
+      mkBox(WT,wH,wallSL,m3,wallCx+W/2+WT/2,yMid,wallCz);
+    } else {
+      mkBox(wallSL,wH,WT,m3,wallCx,yMid,wallCz-W/2-WT/2);
+      mkBox(wallSL,wH,WT,m3,wallCx,yMid,wallCz+W/2+WT/2);
+    }
+  }
+});
+
+
+
+// Junction patches — floor and ceiling only (walls handled by trimmed corridor slabs above)
+for(let i=0;i<SEGS.length-1;i++){
+  const a=SEGS[i], b=SEGS[i+1];
+  if(a.axis===b.axis) continue;
+  const zSeg=(a.axis==='z')?a:b;
+  const xSeg=(a.axis==='z')?b:a;
+  const jx=(a.axis==='z')?a.x0:a.x0+a.len;
+  const jz=(a.axis==='z')?a.z0+a.len:a.z0;
+  const jyFloor=a.yFloor+a.dy;
+  const H=Math.max(a.H,b.H);
+  const Wz=zSeg.W, Wx=xSeg.W;
+  mkBox(Wz, WT, Wx, RMATS[i%3], jx, jyFloor-H/2-WT/2, jz);
+  mkBox(Wz+0.3, WT, Wx+0.3, RMATS[(i+1)%3], jx, jyFloor+H/2+WT/2, jz);
+}
+{
+  const s=SEGS[0]; const H=s.H; const W=s.W;
+  mkBox(W+WT*2, H+WT*2, WT, mA, s.x0, s.yFloor, s.z0-WT/2);
+}
+{
+  const s=SEGS[SEGS.length-2]; const endZ=s.z0+s.len;
+  mkBox(s.W+WT*2, s.H+WT*2, WT, mA, s.x0, s.yFloor+s.dy, endZ+WT/2);
+}
+
+function rng(a,b){return a+Math.random()*(b-a);}
+function jitterDodec(r){
+  const g=new THREE.DodecahedronGeometry(r,0);
+  const p=g.attributes.position;
+  for(let i=0;i<p.count;i++) p.setXYZ(i,p.getX(i)+rng(-.14,.14)*r,p.getY(i)+rng(-.14,.14)*r,p.getZ(i)+rng(-.14,.14)*r);
+  g.computeVertexNormals(); return g;
+}
+
+SEGS.slice(0,33).forEach(s=>{
+  const {axis,x0,z0,len,yFloor,W,H,dy}=s;
+  const n=Math.max(4,Math.floor(Math.abs(len)/2.5));
+  for(let i=0;i<n;i++){
+    const t=Math.random();
+    const rx=(axis==='z')?x0+rng(-W*.4,W*.4):x0+len*t;
+    const rz=(axis==='z')?z0+len*t:z0+rng(-W*.4,W*.4);
+    const fy=yFloor+dy*t-H/2;
+    const r=rng(.05,.24);
+    const rock=new THREE.Mesh(jitterDodec(r),RMATS[Math.floor(Math.random()*3)]);
+    rock.position.set(rx,fy+r*.5,rz);
+    rock.rotation.set(rng(0,Math.PI*2),rng(0,Math.PI*2),rng(0,Math.PI*2));
+    scene.add(rock);
+  }
+});
+
+// ARROWS
+// Canvas arrow always points RIGHT (→). We rotate the plane so right = travel direction.
+// axis='z', len>0 (+Z): plane on left wall (-X), normal faces +X. rotY=-PI/2 makes right=+Z. 
+// axis='z', len<0 (-Z): rotY=+PI/2 makes right=-Z.
+// axis='x', len>0 (+X): plane on front wall (-Z), normal faces +Z. rotY=0 makes right=+X.
+// axis='x', len<0 (-X): rotY=PI makes right=-X.
+
+function makeArrowCanvas(){
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=128;
+  const ctx=cv.getContext('2d');
+  ctx.clearRect(0,0,256,128);
+  ctx.shadowColor='#ddff00'; ctx.shadowBlur=20;
+  ctx.strokeStyle='#ddff00'; ctx.fillStyle='#ddff00'; ctx.lineWidth=8; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(28,64); ctx.lineTo(185,64); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(228,64); ctx.lineTo(160,26); ctx.lineTo(160,102); ctx.closePath(); ctx.fill();
+  return cv;
+}
+const arrowTex=new THREE.CanvasTexture(makeArrowCanvas());
+
+function placeArrow(segIdx,t){
+  const s=SEGS[segIdx]; if(!s) return;
+  const {axis,x0,z0,len,yFloor,W,H,dy}=s;
+  const tc=Math.max(.12,Math.min(.88,t));
+  const fy=yFloor+dy*tc-H/2;
+  const wy=fy+H*0.52;
+  let wx,wz,rotY;
+
+  if(axis==='z'){
+    wz=z0+len*tc;
+    // Place on left wall, offset INWARD so it's visible (not inside wall geometry)
+    wx=x0-W/2+0.22;
+    // Arrow must point in travel direction (+Z or -Z)
+    // PlaneGeometry faces +Z by default; canvas arrow points RIGHT (+X on canvas)
+    // rotY=-PI/2 makes the plane face +X, with its local X axis pointing +Z → correct for len>0
+    // rotY=+PI/2 makes the plane face -X, with its local X axis pointing -Z → correct for len<0
+    rotY=(len>0)?-Math.PI/2:Math.PI/2;
+  } else {
+    wx=x0+len*tc;
+    // Place on front wall (-Z side), offset inward
+    wz=z0-W/2+0.22;
+    // rotY=0: plane faces +Z, local X = +X → correct for len>0
+    // rotY=PI: plane faces -Z, local X = -X → correct for len<0
+    rotY=(len>0)?0:Math.PI;
+  }
+  const mat=new THREE.MeshBasicMaterial({map:arrowTex,transparent:true,depthWrite:false,side:THREE.DoubleSide});
+  const plane=new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.7),mat);
+  plane.position.set(wx,wy,wz);
+  plane.rotation.y=rotY;
+  scene.add(plane);
+}
+
+for(let i=1;i<=32;i++){
+  if(i%2===1){ placeArrow(i,0.3); placeArrow(i,0.72); }
+}
+
+// FINAL ROOM
+const GCOLS=[0xff0077,0x00ffcc,0xff6600,0xaaff00,0xff00ff,0x00aaff,0xffff00,0xff3322,0x33ff99];
+const ROOM_FLOOR_Y=FF-FH/2;
+
+function makeGraffitiTex(){
+  const cv=document.createElement('canvas'); cv.width=512; cv.height=256;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,512,256);
+  const WORDS=['ECHO','LOST','DEEP','RUN','FOUND','HERE','DARK','LIGHT','NOW','NEVER',
+               'ALWAYS','DOWN','ALONE','FREE','VOID','REAL','BELOW','ABOVE','FEAR','CAVE'];
+  const n=1+Math.floor(Math.random()*3);
+  for(let i=0;i<n;i++){
+    const col='#'+GCOLS[Math.floor(Math.random()*GCOLS.length)].toString(16).padStart(6,'0');
+    ctx.save();
+    ctx.shadowColor=col; ctx.shadowBlur=16; ctx.fillStyle=col;
+    ctx.font=`bold ${52+Math.random()*68}px "Arial Black",sans-serif`;
+    ctx.translate(30+Math.random()*310,50+Math.random()*155);
+    ctx.rotate((Math.random()-.5)*.4);
+    ctx.fillText(WORDS[Math.floor(Math.random()*WORDS.length)],0,0);
+    ctx.restore();
+  }
+  for(let d=0;d<5;d++){
+    ctx.fillStyle='#'+GCOLS[Math.floor(Math.random()*GCOLS.length)].toString(16).padStart(6,'0');
+    ctx.fillRect(rng(20,490),rng(10,60),rng(2,5),rng(25,100));
+  }
+  return new THREE.CanvasTexture(cv);
+}
+
+// Non-overlapping graffiti grid
+function addGraffitiGrid(isXWall,wallCoord,yBase){
+  const PW=3.2,PH=2.0,GAP=0.28;
+  if(isXWall){
+    // panels span Z of room
+    const range=FD-1;
+    const cols=Math.floor(range/(PW+GAP));
+    const facingRight=(wallCoord<FCX);
+    for(let col=0;col<cols;col++){
+      for(let row=0;row<2;row++){
+        const cz=FZ0+0.5+(col+.5)*(range/cols);
+        const cy=yBase+row*(PH+GAP)+PH/2;
+        const mat=new THREE.MeshBasicMaterial({map:makeGraffitiTex(),transparent:true,depthWrite:false,side:THREE.DoubleSide});
+        const p=new THREE.Mesh(new THREE.PlaneGeometry(PW,PH),mat);
+        p.position.set(wallCoord,cy,cz);
+        p.rotation.y=facingRight?Math.PI/2:-Math.PI/2;
+        scene.add(p);
+      }
+    }
+  } else {
+    // back wall, panels span X
+    const range=FW-1;
+    const cols=Math.floor(range/(PW+GAP));
+    for(let col=0;col<cols;col++){
+      for(let row=0;row<2;row++){
+        const cx=FCX-FW/2+0.5+(col+.5)*(range/cols);
+        const cy=yBase+row*(PH+GAP)+PH/2;
+        const mat=new THREE.MeshBasicMaterial({map:makeGraffitiTex(),transparent:true,depthWrite:false,side:THREE.DoubleSide});
+        const p=new THREE.Mesh(new THREE.PlaneGeometry(PW,PH),mat);
+        p.position.set(cx,cy,FZ0+FD-0.07);
+        p.rotation.y=Math.PI; // face toward entrance
+        scene.add(p);
+      }
+    }
+  }
+}
+
+addGraffitiGrid(true, FCX-FW/2+0.07, ROOM_FLOOR_Y+0.1); // left wall
+addGraffitiGrid(true, FCX+FW/2-0.07, ROOM_FLOOR_Y+0.1); // right wall
+addGraffitiGrid(false,0,            ROOM_FLOOR_Y+0.1); // back wall
+
+// Room lights
+GCOLS.forEach((col,i)=>{
+  const light=new THREE.PointLight(col,1.0,14);
+  light.position.set(FCX+rng(-FW/2+2,FW/2-2),FF+rng(0,2),FZ0+2+(i/GCOLS.length)*(FD-4));
+  scene.add(light);
+});
+
+// Debris
+for(let i=0;i<40;i++){
+  const col=GCOLS[i%GCOLS.length];
+  const mat=new THREE.MeshLambertMaterial({color:col,emissive:col,emissiveIntensity:0.3});
+  const geoIdx=i%3;
+  const geo=geoIdx===0?new THREE.BoxGeometry(rng(.1,.5),rng(.04,.22),rng(.1,.4)):
+            geoIdx===1?jitterDodec(rng(.06,.22)):
+                       new THREE.CylinderGeometry(rng(.02,.06),rng(.04,.08),rng(.15,.45),6);
+  const piece=new THREE.Mesh(geo,mat);
+  piece.position.set(FCX+rng(-(FW/2-.7),(FW/2-.7)),ROOM_FLOOR_Y+.06,FZ0+1+Math.random()*(FD-2));
+  piece.rotation.set(rng(0,Math.PI*2),rng(0,Math.PI*2),rng(0,Math.PI*2));
+  scene.add(piece);
+}
+
+// Platform
+const PLAT_Z=FZ0+FD/2+2, PLAT_Y=ROOM_FLOOR_Y+0.14, PLAT_R=1.3;
+const platMesh=new THREE.Mesh(new THREE.CylinderGeometry(PLAT_R,PLAT_R+0.15,0.28,14), new THREE.MeshLambertMaterial({color:0x2a2a2a}));
+platMesh.position.set(FCX,PLAT_Y,PLAT_Z); scene.add(platMesh);
+const ringMesh=new THREE.Mesh(new THREE.TorusGeometry(PLAT_R+0.05,0.055,8,32), new THREE.MeshBasicMaterial({color:0xddff00}));
+ringMesh.rotation.x=Math.PI/2; ringMesh.position.set(FCX,PLAT_Y+0.15,PLAT_Z); scene.add(ringMesh);
+const platLight=new THREE.PointLight(0xddff00,2.0,10);
+platLight.position.set(FCX,PLAT_Y+3,PLAT_Z); scene.add(platLight);
+
+// Password text - single wide canvas, 4 copies in ring
+const pwCv=document.createElement('canvas'); pwCv.width=1024; pwCv.height=128;
+{
+  const ctx=pwCv.getContext('2d');
+  ctx.clearRect(0,0,1024,128);
+  ctx.font='bold 56px "Courier New",monospace';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowColor='#ddff00'; ctx.shadowBlur=28; ctx.fillStyle='#ddff00';
+  for(let g=0;g<3;g++) ctx.fillText('password: tungnguyen',512,64);
+}
+const pwTex=new THREE.CanvasTexture(pwCv);
+const PW_W=4.4, PW_H=0.55; // aspect 8:1
+
+const textGroup=new THREE.Group();
+textGroup.position.set(FCX,PLAT_Y+2.1,PLAT_Z); scene.add(textGroup);
+for(let i=0;i<4;i++){
+  const angle=(i/4)*Math.PI*2;
+  const mat=new THREE.MeshBasicMaterial({map:pwTex,transparent:true,depthWrite:false,side:THREE.DoubleSide});
+  const p=new THREE.Mesh(new THREE.PlaneGeometry(PW_W,PW_H),mat);
+  p.position.set(Math.sin(angle)*1.0,0,Math.cos(angle)*1.0);
+  p.rotation.y=-angle;
+  textGroup.add(p);
+}
+
+// COLLISION + FLOOR
+// Junction walkable zones — registered alongside SEGS for floor/collision lookup
+const JUNCTIONS = [];
+for(let i=0;i<SEGS.length-1;i++){
+  const a=SEGS[i], b=SEGS[i+1];
+  if(a.axis===b.axis) continue;
+  const zSeg = (a.axis==='z') ? a : b;
+  const xSeg = (a.axis==='z') ? b : a;
+  const jx = (a.axis==='z') ? a.x0 : a.x0+a.len;
+  const jz = (a.axis==='z') ? a.z0+a.len : a.z0;
+  const jyFloor = a.yFloor + a.dy;
+  const Wz = zSeg.W, Wx = xSeg.W;
+  JUNCTIONS.push({
+    xMin: jx - Wz/2, xMax: jx + Wz/2,
+    zMin: jz - Wx/2, zMax: jz + Wx/2,
+    fy: jyFloor - Math.max(a.H,b.H)/2
+  });
+}
+
+function getFloorY(x,z){
+  let best=null;
+  for(const s of SEGS){
+    if(x>=s.xMin&&x<=s.xMax&&z>=s.zMin&&z<=s.zMax){
+      const absLen=Math.abs(s.len);
+      let t=(s.axis==='z')?(z-s.zMin)/absLen:(x-s.xMin)/absLen;
+      t=Math.max(0,Math.min(1,t));
+      const fy=s.yFloor+s.dy*t-s.H/2;
+      if(best===null||fy>best) best=fy;
+    }
+  }
+  for(const j of JUNCTIONS){
+    if(x>=j.xMin&&x<=j.xMax&&z>=j.zMin&&z<=j.zMax){
+      if(best===null||j.fy>best) best=j.fy;
+    }
+  }
+  return best;
+}
+
+const PLAYER_RADIUS = 0.35;
+
+// Check if position (x,z) with given radius is valid (all four "corners" must be in a segment)
+function positionValid(x, z) {
+  // Check centre and four probe points at player radius
+  const probes = [
+    [x, z],
+    [x + PLAYER_RADIUS, z],
+    [x - PLAYER_RADIUS, z],
+    [x, z + PLAYER_RADIUS],
+    [x, z - PLAYER_RADIUS],
+  ];
+  // Every probe must land in at least one segment
+  for (const [px, pz] of probes) {
+    if (getFloorY(px, pz) === null) return false;
+  }
+  return true;
+}
+let yaw=Math.PI,pitch=0,keys={},isLocked=false,gameEnded=false;
+renderer.domElement.addEventListener('click',()=>{ if(!isLocked && gameStarted) renderer.domElement.requestPointerLock(); });
+document.addEventListener('pointerlockchange',()=>{
+  isLocked=document.pointerLockElement===renderer.domElement;
+  if(isLocked && gameStarted) bgm.play().catch(()=>{});
+});
+document.addEventListener('mousemove',e=>{
+  if(!isLocked) return;
+  yaw-=e.movementX*0.0018; pitch-=e.movementY*0.0018;
+  pitch=Math.max(-1.15,Math.min(1.15,pitch));
+});
+document.addEventListener('keydown',e=>{keys[e.code]=true;});
+document.addEventListener('keyup',  e=>{keys[e.code]=false;});
+
+// PLAYER
+const PLAYER_EYE=1.65, SPEED=4.8;
+const playerPos=new THREE.Vector3(0,PLAYER_EYE,4);
+let bobT=0;
+const clock=new THREE.Clock();
+let globalT=0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+  globalT+=dt;
+
+  if(!gameEnded){
+    const fwd=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+    const rgt=new THREE.Vector3( Math.cos(yaw),0,-Math.sin(yaw));
+    const mv=new THREE.Vector3();
+    if(keys['KeyW']||keys['ArrowUp'])    mv.addScaledVector(fwd, 1);
+    if(keys['KeyS']||keys['ArrowDown'])  mv.addScaledVector(fwd,-1);
+    if(keys['KeyA']||keys['ArrowLeft'])  mv.addScaledVector(rgt,-1);
+    if(keys['KeyD']||keys['ArrowRight']) mv.addScaledVector(rgt, 1);
+
+    const moving=mv.lengthSq()>0;
+    if(moving){
+      mv.normalize().multiplyScalar(SPEED*dt);
+      // Axis-separated slide collision with player radius
+      const nx=playerPos.x+mv.x;
+      if(positionValid(nx,playerPos.z)) playerPos.x=nx;
+      const nz=playerPos.z+mv.z;
+      if(positionValid(playerPos.x,nz)) playerPos.z=nz;
+      bobT+=dt*8.5;
+    }
+
+    const fy=getFloorY(playerPos.x,playerPos.z);
+    if(fy!==null) playerPos.y=fy+PLAYER_EYE;
+
+    const bob=moving?Math.sin(bobT)*0.052:0;
+    const sway=moving?Math.sin(bobT*.5)*0.020:0;
+    camera.position.copy(playerPos); camera.position.y+=bob;
+    camera.rotation.order='YXZ'; camera.rotation.y=yaw; camera.rotation.x=pitch;
+
+    handGroup.position.y=-0.165+bob*0.7;
+    handGroup.position.x= 0.165+sway*1.0;
+    handGroup.rotation.z=-0.06+sway*0.3;
+
+    textGroup.rotation.y=globalT*0.6;
+    const pulse=.5+.5*Math.sin(globalT*2.5);
+    ringMesh.material.color.setHSL(.18,1.0,.38+pulse*.28);
+    platLight.intensity=1.4+pulse*1.0;
+
+    const dx2=playerPos.x-FCX, dz2=playerPos.z-PLAT_Z;
+    if(Math.sqrt(dx2*dx2+dz2*dz2)<PLAT_R+0.4){
+      gameEnded=true;
+      overlay.classList.remove('fadein'); overlay.classList.add('fadeout');
+      setTimeout(()=>{window.location.href='index.html';},2800);
+    }
+  }
+  renderer.render(scene,camera);
+}
+
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+
+animate();
+</script>
+</body>
+</html>

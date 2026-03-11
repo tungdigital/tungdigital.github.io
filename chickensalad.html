@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<title>Trans men</title>
+
+<style>
+body {
+    margin: 0;
+    background: black;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    text-align: center;
+}
+
+img {
+    max-width: 60vw;
+    max-height: 60vh;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <img src="images/bred.jpg" alt="For">
+</div>
+
+<audio id="bgAudio" src="audio/192000.mp3" loop autoplay></audio>
+
+<script>
+const audio = document.getElementById("bgAudio");
+audio.volume = 0.7;
+
+document.body.addEventListener("click", function() {
+    audio.play();
+}, { once: true });
+
+// random time between 10s and 60s
+const min = 10000;
+const max = 60000;
+const randomDelay = Math.floor(Math.random() * (max - min + 1)) + min;
+
+setTimeout(function() {
+    window.location.href = "temple.html";
+}, randomDelay);
+</script>
+
+</body>
+</html>

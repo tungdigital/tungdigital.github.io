@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Culling</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+</head>
+<style>
+    body {
+        background-image: url("images/groceries.jpg");
+        background-size: 300px 300px;
+        font-family: Comic Sans MS, cursive, sans-serif;
+        animation: moveBackground 60s linear infinite;
+        margin: 0;
+        padding: 0;
+        padding-bottom: 180px;
+    }
+
+    @keyframes moveBackground {
+        from { background-position: 0 0; }
+        to { background-position: -1000% -2000%; }
+    }
+
+    h1, h2, p {
+        color: black;
+    }
+
+    /* ── TIMER ── */
+    #timer-bar {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 18px 0 22px;
+        background: rgba(0, 0, 0, 0.82);
+        backdrop-filter: blur(12px);
+        border-top: 2px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+    }
+
+    #timer-label {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 11px;
+        letter-spacing: 5px;
+        color: rgba(255,255,255,0.35);
+        margin-bottom: 6px;
+        text-transform: uppercase;
+    }
+
+    #timer-display {
+        font-family: 'Share Tech Mono', monospace;
+        font-size: 64px;
+        color: #fff;
+        line-height: 1;
+        position: relative;
+        text-shadow:
+            0 0 20px rgba(255, 80, 80, 0.6),
+            0 0 60px rgba(255, 80, 80, 0.3);
+        animation: pulse 1s ease-in-out infinite;
+        transition: color 0.5s;
+    }
+
+    #timer-display.danger {
+        color: #ff3b3b;
+        text-shadow:
+            0 0 20px rgba(255, 0, 0, 0.9),
+            0 0 60px rgba(255, 0, 0, 0.6),
+            0 0 120px rgba(255, 0, 0, 0.3);
+        animation: pulse-danger 0.4s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.85; transform: scale(0.985); }
+    }
+
+    @keyframes pulse-danger {
+        0%, 100% { opacity: 1; transform: scale(1) skewX(0deg); }
+        25% { opacity: 0.7; transform: scale(1.04) skewX(-1deg); }
+        75% { transform: scale(0.97) skewX(1deg); }
+    }
+
+    /* progress bar */
+    #progress-track {
+        width: 340px;
+        max-width: 90vw;
+        height: 4px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 2px;
+        margin-top: 12px;
+        overflow: hidden;
+    }
+
+    #progress-fill {
+        height: 100%;
+        width: 100%;
+        background: linear-gradient(90deg, #ff6b6b, #ffd93d);
+        border-radius: 2px;
+        transform-origin: left;
+        transition: width 1s linear, background 0.5s;
+    }
+
+    #progress-fill.danger {
+        background: linear-gradient(90deg, #ff0000, #ff6b00);
+    }
+
+    /* digit flip animation on each second */
+    .tick {
+        animation: tick-flash 0.12s ease-out;
+    }
+
+    @keyframes tick-flash {
+        0% { transform: translateY(-6px); opacity: 0.4; }
+        100% { transform: translateY(0); opacity: 1; }
+    }
+
+    /* redirect overlay */
+    #redirect-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: #000;
+        z-index: 99999;
+        animation: fadeInOverlay 0.6s ease forwards;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        font-family: 'Bebas Neue', sans-serif;
+        color: #fff;
+        font-size: 42px;
+        letter-spacing: 8px;
+    }
+
+    #redirect-overlay.active {
+        display: flex;
+    }
+
+    @keyframes fadeInOverlay {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+
+<body>
+    <video width="320" height="240" controls>
+        <source type="video/mp4" src="videos/phone.mp4">
+    </video>
+    <video width="320" height="240" controls>
+        <source type="video/mp4" src="videos/phone.mp4">
+    </video>
+    <video width="320" height="240" controls>
+        <source type="video/mp4" src="videos/phone.mp4">
+    </video>
+    <video width="320" height="240" controls>
+        <source type="video/mp4" src="videos/phone.mp4">
+    </video>
+    <video width="320" height="240" controls>
+        <source type="video/mp4" src="videos/phone.mp4">
+    </video>
+    <video width="320" height="240" controls>
+        <source type="video/mp4" src="videos/phone.mp4">
+    </video>
+    <video width="320" height="240" controls>
+        <source type="video/mp4" src="videos/phone.mp4">
+    </video>
+    <video width="320" height="240" controls>
+        <source type="video/mp4" src="videos/phone.mp4">
+    </video>
+    <video width="320" height="240" controls>
+        <source type="video/mp4" src="videos/phone.mp4">
+    </video>
+    <video width="320" height="240" controls>
+        <source type="video/mp4" src="videos/phone.mp4">
+    </video>
+    <iframe width="560" height="315" src="https://www.youtube.com/embed/mdhtm6qjmhU?si=5IdoOzsw8qyrupUM"
+        title="YouTube video player" frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+    <!-- Timer Bar -->
+    <div id="timer-bar">
+        <div id="timer-label">redirecting in</div>
+        <div id="timer-display">0:00</div>
+        <div id="progress-track">
+            <div id="progress-fill"></div>
+        </div>
+    </div>
+
+    <!-- Redirect Overlay -->
+    <div id="redirect-overlay">
+        <span>🥚</span>
+        <span style="margin-top:12px; font-size:18px; letter-spacing:6px; opacity:0.6;">I like to touch myself in the bathroom but i don't tell any of my friends</span>
+    </div>
+
+    <script>
+        // Random between 90s (1:30) and 180s (3:00)
+        const totalSeconds = Math.floor(Math.random() * (180 - 90 + 1)) + 90;
+        let remaining = totalSeconds;
+
+        const display = document.getElementById('timer-display');
+        const fill = document.getElementById('progress-fill');
+        const overlay = document.getElementById('redirect-overlay');
+
+        function fmt(s) {
+            const m = Math.floor(s / 60);
+            const sec = s % 60;
+            return `${m}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        function updateDisplay() {
+            display.textContent = fmt(remaining);
+            // trigger tick animation
+            display.classList.remove('tick');
+            void display.offsetWidth; // reflow
+            display.classList.add('tick');
+
+            // progress bar
+            const pct = (remaining / totalSeconds) * 100;
+            fill.style.width = pct + '%';
+
+            // danger mode under 30s
+            if (remaining <= 30) {
+                display.classList.add('danger');
+                fill.classList.add('danger');
+            }
+        }
+
+        // Init
+        updateDisplay();
+
+        const interval = setInterval(() => {
+            remaining--;
+            updateDisplay();
+
+            if (remaining <= 0) {
+                clearInterval(interval);
+                overlay.classList.add('active');
+                setTimeout(() => {
+                    window.location.href = 'eggs.html';
+                }, 700);
+            }
+        }, 1000);
+    </script>
+</body>
+
+</html>

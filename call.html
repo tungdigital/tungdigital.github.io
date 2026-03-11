@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phone</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #1a1a1a;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, #2a1f0e 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, #0e1a0e 0%, transparent 50%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    overflow: hidden;
+  }
+
+  /* Desk surface */
+  body::before {
+    content: '';
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 38%;
+    background: linear-gradient(180deg, #2c1f0f 0%, #1a1208 100%);
+    border-top: 3px solid #3d2a12;
+    z-index: 0;
+  }
+
+  .scene {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  /* Phone cord */
+  .cord {
+    width: 4px;
+    height: 80px;
+    background: repeating-linear-gradient(
+      180deg,
+      #1a1a1a 0px,
+      #1a1a1a 4px,
+      #2d2d2d 4px,
+      #2d2d2d 8px
+    );
+    border-radius: 2px;
+    position: relative;
+    margin-bottom: -2px;
+  }
+
+  .phone-body {
+    width: 340px;
+    background: linear-gradient(145deg, #2e2e2e 0%, #1c1c1c 40%, #222 100%);
+    border-radius: 18px 18px 30px 30px;
+    padding: 0;
+    box-shadow:
+      0 20px 60px rgba(0,0,0,0.8),
+      0 4px 0 #111,
+      inset 0 1px 0 rgba(255,255,255,0.08),
+      inset 0 -2px 4px rgba(0,0,0,0.5);
+    position: relative;
+    border: 1px solid #3a3a3a;
+  }
+
+  /* Handset cradle top */
+  .handset-area {
+    background: linear-gradient(180deg, #1a1a1a 0%, #252525 100%);
+    border-radius: 18px 18px 0 0;
+    padding: 14px 20px 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 2px solid #111;
+    position: relative;
+  }
+
+  .handset-area::before {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 20px; right: 20px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #444, transparent);
+  }
+
+  /* Earpiece / speaker grille */
+  .speaker-grille {
+    display: grid;
+    grid-template-columns: repeat(5, 6px);
+    gap: 3px;
+    padding: 8px;
+    background: #111;
+    border-radius: 8px;
+    border: 1px solid #2a2a2a;
+    flex-shrink: 0;
+  }
+
+  .speaker-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #0a0a0a;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+  }
+
+  /* LED display */
+  .display-container {
+    flex: 1;
+    background: #0d1a0d;
+    border: 2px solid #1a3a1a;
+    border-radius: 6px;
+    padding: 6px 10px;
+    box-shadow:
+      inset 0 2px 6px rgba(0,0,0,0.8),
+      0 0 10px rgba(0,80,0,0.15);
+  }
+
+  .display-label {
+    font-size: 8px;
+    color: #2a5a2a;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .display-number {
+    font-family: 'VT323', monospace;
+    font-size: 28px;
+    color: #00cc44;
+    text-shadow: 0 0 8px rgba(0, 204, 68, 0.6);
+    letter-spacing: 3px;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    min-width: 140px;
+  }
+
+  .display-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 22px;
+    background: #00cc44;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+
+  /* Status line */
+  .display-status {
+    font-size: 9px;
+    color: #1a4a1a;
+    letter-spacing: 1px;
+    margin-top: 2px;
+    min-height: 12px;
+    transition: color 0.3s;
+  }
+
+  .display-status.active { color: #00cc44; text-shadow: 0 0 6px rgba(0,204,68,0.5); }
+
+  /* Main keypad section */
+  .keypad-section {
+    padding: 16px 20px 20px;
+  }
+
+  /* Brand label */
+  .brand {
+    text-align: center;
+    font-family: 'VT323', monospace;
+    font-size: 13px;
+    color: #3a3a3a;
+    letter-spacing: 6px;
+    margin-bottom: 14px;
+  }
+
+  /* Input + dial button row */
+  .input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    align-items: stretch;
+  }
+
+  .phone-input {
+    flex: 1;
+    background: #111;
+    border: 1px solid #2a2a2a;
+    border-radius: 6px;
+    color: #ccc;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 15px;
+    padding: 8px 10px;
+    outline: none;
+    letter-spacing: 2px;
+    transition: border-color 0.2s;
+  }
+
+  .phone-input:focus { border-color: #444; }
+  .phone-input::placeholder { color: #333; }
+
+  /* Keypad grid */
+  .keypad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .key {
+    background: linear-gradient(145deg, #2e2e2e 0%, #1e1e1e 100%);
+    border: 1px solid #3a3a3a;
+    border-bottom: 3px solid #111;
+    border-radius: 8px;
+    color: #ccc;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px;
+    padding: 10px 0 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    transition: all 0.07s;
+    user-select: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  .key:hover { background: linear-gradient(145deg, #363636 0%, #262626 100%); }
+
+  .key:active, .key.pressed {
+    transform: translateY(2px);
+    border-bottom: 1px solid #111;
+    box-shadow: 0 0 4px rgba(0,0,0,0.5);
+    background: linear-gradient(145deg, #1e1e1e 0%, #2a2a2a 100%);
+  }
+
+  .key-sub {
+    font-size: 7px;
+    color: #555;
+    letter-spacing: 1px;
+  }
+
+  /* Bottom row: star, 0, hash */
+  .key.symbol { font-size: 22px; padding-top: 8px; }
+
+  /* Call button */
+  .call-button {
+    width: 100%;
+    background: linear-gradient(145deg, #1a3a1a 0%, #0d200d 100%);
+    border: 1px solid #2a4a2a;
+    border-bottom: 3px solid #050f05;
+    border-radius: 10px;
+    color: #00cc44;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 3px;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.07s;
+    text-shadow: 0 0 8px rgba(0, 204, 68, 0.5);
+    box-shadow:
+      0 2px 8px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.04);
+    user-select: none;
+  }
+
+  .call-button:hover:not(:disabled) {
+    background: linear-gradient(145deg, #1f4a1f 0%, #112811 100%);
+    border-color: #3a6a3a;
+  }
+
+  .call-button:active:not(:disabled) {
+    transform: translateY(2px);
+    border-bottom: 1px solid #050f05;
+  }
+
+  .call-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .call-icon {
+    width: 18px;
+    height: 18px;
+    fill: #00cc44;
+    filter: drop-shadow(0 0 4px rgba(0,204,68,0.5));
+  }
+
+  /* End call button */
+  .end-button {
+    width: 100%;
+    background: linear-gradient(145deg, #3a0a0a 0%, #200505 100%);
+    border: 1px solid #5a1a1a;
+    border-bottom: 3px solid #100000;
+    border-radius: 10px;
+    color: #ff4444;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 3px;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.07s;
+    display: none;
+    user-select: none;
+  }
+
+  /* Screws */
+  .screw {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #444, #1a1a1a);
+    border: 1px solid #111;
+    position: absolute;
+  }
+
+  .screw.tl { top: 10px; left: 10px; }
+  .screw.tr { top: 10px; right: 10px; }
+  .screw.bl { bottom: 10px; left: 10px; }
+  .screw.br { bottom: 10px; right: 10px; }
+
+  /* Ringing animation */
+  @keyframes ring-shake {
+    0%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(-3deg) translateX(-2px); }
+    30% { transform: rotate(3deg) translateX(2px); }
+    45% { transform: rotate(-2deg) translateX(-1px); }
+    60% { transform: rotate(2deg) translateX(1px); }
+    75% { transform: rotate(-1deg); }
+  }
+
+  .phone-body.ringing {
+    animation: ring-shake 0.5s ease-in-out;
+  }
+
+  /* Volume knob */
+  .bottom-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #1a1a1a;
+  }
+
+  .knob-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .knob {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #3a3a3a, #111);
+    border: 1px solid #2a2a2a;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    position: relative;
+  }
+
+  .knob::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 6px;
+    background: #555;
+    border-radius: 1px;
+  }
+
+  .knob-label {
+    font-size: 8px;
+    color: #333;
+    letter-spacing: 1px;
+  }
+
+  .model-tag {
+    font-size: 8px;
+    color: #2a2a2a;
+    letter-spacing: 2px;
+  }
+
+  /* Ring flash effect on display */
+  @keyframes ring-flash {
+    0%, 100% { background: #0d1a0d; }
+    50% { background: #0d2a0d; box-shadow: inset 0 2px 6px rgba(0,0,0,0.8), 0 0 20px rgba(0,150,0,0.4); }
+  }
+
+  .display-container.ringing {
+    animation: ring-flash 0.5s ease-in-out;
+  }
+</style>
+</head>
+<body>
+
+<div class="scene">
+  <div class="cord"></div>
+
+  <div class="phone-body" id="phoneBody">
+    <div class="screw tl"></div>
+    <div class="screw tr"></div>
+    <div class="screw bl"></div>
+    <div class="screw br"></div>
+
+    <!-- Handset / top section -->
+    <div class="handset-area">
+      <div class="speaker-grille">
+        <!-- 4 rows x 5 cols = 20 dots -->
+        <div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div>
+        <div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div>
+        <div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div>
+        <div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div><div class="speaker-dot"></div>
+      </div>
+
+      <div class="display-container" id="displayContainer">
+        <div class="display-label">NUMBER</div>
+        <div class="display-number" id="displayNumber">
+          <span id="displayText"></span><span class="display-cursor" id="cursor"></span>
+        </div>
+        <div class="display-status" id="displayStatus">READY</div>
+      </div>
+    </div>
+
+    <!-- Keypad -->
+    <div class="keypad-section">
+      <div class="brand">TELCOM 9000</div>
+
+      <!-- Hidden input to capture typed numbers -->
+      <input type="tel" class="phone-input" id="phoneInput" placeholder="or type number..." maxlength="15" autocomplete="off" />
+
+      <div class="keypad" id="keypad">
+        <button class="key" data-num="1">1<span class="key-sub">&nbsp;</span></button>
+        <button class="key" data-num="2">2<span class="key-sub">ABC</span></button>
+        <button class="key" data-num="3">3<span class="key-sub">DEF</span></button>
+        <button class="key" data-num="4">4<span class="key-sub">GHI</span></button>
+        <button class="key" data-num="5">5<span class="key-sub">JKL</span></button>
+        <button class="key" data-num="6">6<span class="key-sub">MNO</span></button>
+        <button class="key" data-num="7">7<span class="key-sub">PQRS</span></button>
+        <button class="key" data-num="8">8<span class="key-sub">TUV</span></button>
+        <button class="key" data-num="9">9<span class="key-sub">WXYZ</span></button>
+        <button class="key symbol" data-num="*">*</button>
+        <button class="key" data-num="0">0<span class="key-sub">+</span></button>
+        <button class="key symbol" data-num="#">#</button>
+      </div>
+
+      <button class="call-button" id="callBtn">
+        <svg class="call-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
+        </svg>
+        DIAL
+      </button>
+
+      <button class="end-button" id="endBtn">
+        <svg style="width:18px;height:18px;fill:#ff4444;transform:rotate(135deg)" viewBox="0 0 24 24">
+          <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z"/>
+        </svg>
+        END
+      </button>
+
+      <div class="bottom-controls">
+        <div class="knob-group">
+          <div class="knob"></div>
+          <div class="knob-label">VOL</div>
+        </div>
+        <div class="model-tag">MDL-TC9000 REV.2</div>
+        <div class="knob-group">
+          <div class="knob-label">RNG</div>
+          <div class="knob"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<audio id="ringAudio" preload="auto">
+  <!-- Synthesized ring tone via Web Audio -->
+</audio>
+<audio id="phoneAudio" src="audio/phone1.mp3" preload="auto"></audio>
+
+<script>
+  const phoneBody = document.getElementById('phoneBody');
+  const displayText = document.getElementById('displayText');
+  const displayStatus = document.getElementById('displayStatus');
+  const displayContainer = document.getElementById('displayContainer');
+  const phoneInput = document.getElementById('phoneInput');
+  const callBtn = document.getElementById('callBtn');
+  const endBtn = document.getElementById('endBtn');
+  const keypad = document.getElementById('keypad');
+  const phoneAudio = document.getElementById('phoneAudio');
+
+  let number = '';
+  let busy = false;
+  let audioCtx = null;
+
+  function updateDisplay(text) {
+    displayText.textContent = text;
+  }
+
+  function setStatus(msg, active = false) {
+    displayStatus.textContent = msg;
+    displayStatus.className = 'display-status' + (active ? ' active' : '');
+  }
+
+  function appendDigit(d) {
+    if (busy) return;
+    if (number.length >= 15) return;
+    number += d;
+    updateDisplay(number);
+    phoneInput.value = number;
+  }
+
+  // Keypad buttons
+  keypad.querySelectorAll('.key').forEach(btn => {
+    btn.addEventListener('mousedown', () => {
+      btn.classList.add('pressed');
+      appendDigit(btn.dataset.num);
+      // click sound
+      playClickTone();
+    });
+    btn.addEventListener('mouseup', () => btn.classList.remove('pressed'));
+    btn.addEventListener('mouseleave', () => btn.classList.remove('pressed'));
+  });
+
+  // Text input sync
+  phoneInput.addEventListener('input', () => {
+    if (busy) return;
+    number = phoneInput.value.replace(/[^0-9*#]/g, '');
+    phoneInput.value = number;
+    updateDisplay(number);
+  });
+
+  // Soft click tone
+  function playClickTone() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.05);
+      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+      osc.start(audioCtx.currentTime);
+      osc.stop(audioCtx.currentTime + 0.06);
+    } catch(e) {}
+  }
+
+  // Ring tone synthesis (classic dual-tone ring: 440Hz + 480Hz)
+  function playRingTone(duration) {
+    return new Promise(resolve => {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc1.connect(gain); osc2.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc1.frequency.setValueAtTime(440, audioCtx.currentTime);
+        osc2.frequency.setValueAtTime(480, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime + duration - 0.05);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+        osc1.start(); osc2.start();
+        osc1.stop(audioCtx.currentTime + duration);
+        osc2.stop(audioCtx.currentTime + duration);
+        setTimeout(resolve, duration * 1000);
+      } catch(e) { setTimeout(resolve, duration * 1000); }
+    });
+  }
+
+  // Shake phone body
+  function shakePhone() {
+    return new Promise(resolve => {
+      phoneBody.classList.add('ringing');
+      displayContainer.classList.add('ringing');
+      phoneBody.addEventListener('animationend', function handler() {
+        phoneBody.classList.remove('ringing');
+        displayContainer.classList.remove('ringing');
+        phoneBody.removeEventListener('animationend', handler);
+        resolve();
+      });
+    });
+  }
+
+  // Pause between rings
+  function pause(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Main dial sequence
+  callBtn.addEventListener('click', async () => {
+    if (busy) return;
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    else audioCtx.resume();
+
+    busy = true;
+    callBtn.disabled = true;
+    endBtn.style.display = 'flex';
+    keypad.style.pointerEvents = 'none';
+    phoneInput.disabled = true;
+
+    const dialedNumber = number || '000-0000';
+    updateDisplay(dialedNumber);
+
+    // Ring 3 times
+    for (let i = 1; i <= 3; i++) {
+      setStatus(`RINGING... (${i}/3)`, true);
+      await Promise.all([
+        playRingTone(1.2),
+        shakePhone()
+      ]);
+      if (i < 3) await pause(800);
+    }
+
+    // Connected
+    setStatus('CONNECTED', true);
+    updateDisplay('CONNECTED');
+
+    // Play audio file
+    phoneAudio.currentTime = 0;
+    try { await phoneAudio.play(); } catch(e) {}
+
+    phoneAudio.onended = () => {
+      window.location.href = 'six.html';
+    };
+  });
+
+  // End call (just for show, resets state)
+  endBtn.addEventListener('click', () => {
+    if (!busy) return;
+    phoneAudio.pause();
+    phoneAudio.currentTime = 0;
+    busy = false;
+    callBtn.disabled = false;
+    endBtn.style.display = 'none';
+    keypad.style.pointerEvents = '';
+    phoneInput.disabled = false;
+    setStatus('READY');
+    updateDisplay(number);
+  });
+
+  // Keyboard input
+  document.addEventListener('keydown', e => {
+    if (busy) return;
+    if (/^[0-9*#]$/.test(e.key)) { appendDigit(e.key); playClickTone(); }
+    if (e.key === 'Backspace') {
+      number = number.slice(0, -1);
+      updateDisplay(number);
+      phoneInput.value = number;
+    }
+    if (e.key === 'Enter') callBtn.click();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Website</title>
+</head>
+<style>
+    body {
+        background-image: url("images/sms.png");
+        font-family: "Comic Sans MS", cursive, sans-serif;
+        color: #000000;
+    }
+</style>
+
+<body>
+
+    <h1>My Website</h1>
+    <p>This is a very simple website.</p>
+    <form>
+        <label for="fname">First name:</label><br>
+        <input type="text" id="fname" name="fname"><br>
+        <label for="lname">Last name:</label><br>
+        <input type="text" id="lname" name="lname">
+    </form>
+    <p>Choose your favorite Web language:</p>
+
+    <form>
+        <input type="radio" id="html" name="fav_language" value="HTML">
+        <label for="html">HTML</label><br>
+        <input type="radio" id="css" name="fav_language" value="CSS">
+        <label for="css">CSS</label><br>
+        <input type="radio" id="javascript" name="fav_language" value="JavaScript">
+        <label for="javascript">JavaScript</label>
+    </form>
+    <script>
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+        ctx.beginPath();
+        ctx.arc(95, 50, 40, 0, 2 * Math.PI);
+        ctx.stroke();
+    </script>
+    <script>
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+
+        // Create gradient
+        var grd = ctx.createLinearGradient(0, 0, 200, 0);
+        grd.addColorStop(0, "red");
+        grd.addColorStop(1, "white");
+
+        // Fill with gradient
+        ctx.fillStyle = grd;
+        ctx.fillRect(10, 10, 150, 80);
+    </script>
+    <dl>
+        <dt>Coffee</dt>
+        <dd>- black hot drink</dd>
+        <dt>Milk</dt>
+        <dd>- white cold drink</dd>
+    </dl>
+    <div style="background-color:black;color:white;padding:20px;">
+        <h2>London</h2>
+        <p>London is the capital city of England. It is the most populous city in the United Kingdom, with a
+            metropolitan area of over 13 million inhabitants.</p>
+    </div>
+    <form action="fortnite.html">
+        First name: <input type="text" name="fname">
+        <button type="submit">Submit</button>
+        <button type="reset">Reset Form</button>
+    </form>
+    <iframe src="https://mongleville.github.io" title="mv"></iframe>
+</body>
+
+</html>

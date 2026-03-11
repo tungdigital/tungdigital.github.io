@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<title>night in</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; }
+  canvas { display: block; }
+  #hud {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    color: #a89070; font-family: 'Courier New', monospace; font-size: 10px;
+    text-align: center; pointer-events: none; letter-spacing: 2px;
+    opacity: 0.4; line-height: 2;
+  }
+  #overlay {
+    position: fixed; inset: 0; background: #0a0608; opacity: 1;
+    pointer-events: none; transition: opacity 2.5s ease; z-index: 100;
+  }
+  #overlay.fadein { opacity: 0; }
+  #title {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    color: #c8a882; font-family: 'Courier New', monospace; font-size: 13px;
+    letter-spacing: 8px; text-transform: lowercase; z-index: 101;
+    opacity: 1; transition: opacity 2s ease; pointer-events: none;
+  }
+  #title.hide { opacity: 0; }
+</style>
+</head>
+<body>
+<audio id="bgm" src="audio/nightin.mp3" loop></audio>
+<div id="overlay"></div>
+<div id="title">night in</div>
+<div id="hud">WASD — MOVE &nbsp;|&nbsp; MOUSE — LOOK &nbsp;|&nbsp; CLICK TO LOCK CURSOR</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ─── RENDERER ───────────────────────────────────────────────────────────────
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.9;
+document.body.appendChild(renderer.domElement);
+
+// ─── SCENE / CAMERA ─────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x0d0810, 2, 22);
+scene.background = new THREE.Color(0x0d0810);
+
+const camera = new THREE.PerspectiveCamera(72, innerWidth / innerHeight, 0.05, 60);
+camera.position.set(0, 1.65, 0);
+
+// ─── POINTER LOCK ────────────────────────────────────────────────────────────
+let locked = false;
+let yaw = 0, pitch = 0;
+document.addEventListener('click', () => renderer.domElement.requestPointerLock());
+document.addEventListener('pointerlockchange', () => { locked = document.pointerLockElement === renderer.domElement; });
+document.addEventListener('mousemove', e => {
+  if (!locked) return;
+  yaw   -= e.movementX * 0.0018;
+  pitch -= e.movementY * 0.0018;
+  pitch = Math.max(-1.1, Math.min(1.1, pitch));
+});
+
+// ─── KEYS ────────────────────────────────────────────────────────────────────
+const keys = {};
+document.addEventListener('keydown', e => keys[e.code] = true);
+document.addEventListener('keyup',   e => keys[e.code] = false);
+
+// ─── MATERIALS ───────────────────────────────────────────────────────────────
+function mat(color, rough = 1, metal = 0, emissive = 0x000000, emissiveInt = 0) {
+  return new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal, emissive, emissiveIntensity: emissiveInt });
+}
+
+const M = {
+  floor:     mat(0x2a1f18, 0.95),
+  rug:       mat(0x4a2e38, 0.98),
+  wall:      mat(0x1a1520, 0.97),
+  ceiling:   mat(0x120f18, 1.0),
+  trim:      mat(0x0e0b12, 0.9),
+  bed:       mat(0x3d2f45, 0.95),
+  bedsheet:  mat(0xd4c4b0, 0.9),
+  pillow:    mat(0xe8ddd0, 0.85),
+  wood:      mat(0x3a2514, 0.85),
+  darkwood:  mat(0x1e1208, 0.8),
+  lampshade: mat(0xf0d090, 0.6, 0, 0xf0d090, 1.8),
+  lampbase:  mat(0x888070, 0.4, 0.6),
+  bulb:      mat(0xfff0c0, 0.1, 0, 0xfff0c0, 6),
+  desk:      mat(0x2e1e0e, 0.8),
+  monitor:   mat(0x111111, 0.3, 0.5),
+  monitorGL: mat(0x050a12, 0.05, 0, 0x1a3a6a, 0.4),
+  keyboard:  mat(0x1a1a1a, 0.9),
+  book:      [mat(0x5a2020), mat(0x204a30), mat(0x1a2850), mat(0x4a3a10), mat(0x3a1a3a)],
+  plant:     mat(0x1a3018, 0.95),
+  soil:      mat(0x1a1008, 0.98),
+  pot:       mat(0x4a3820, 0.7),
+  curtain:   mat(0x1a1525, 0.98),
+  curtainL:  mat(0x221a2e, 0.98),
+  window:    new THREE.MeshStandardMaterial({ color: 0x2030a0, roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.18 }),
+  windowGlow:mat(0x1428a0, 0.1, 0, 0x2040c0, 0.6),
+  star:      mat(0xffffff, 0.1, 0, 0xffffff, 2),
+  frame:     mat(0x1a1218, 0.8),
+  artwork:   mat(0x1a2838, 0.6, 0, 0x1a3050, 0.15),
+  couch:     mat(0x2a2035, 0.95),
+  cushion:   mat(0x3a2a42, 0.9),
+  mug:       mat(0xe8ddd0, 0.6),
+  mugInner:  mat(0x2a1a10, 0.8),
+  candle:    mat(0xf5edd8, 0.8),
+  flame:     mat(0xff9020, 0.2, 0, 0xff6010, 5),
+  nightsky:  mat(0x030208, 1),
+};
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+function box(w, h, d, material, x, y, z, rx = 0, ry = 0, rz = 0) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+  m.position.set(x, y, z);
+  m.rotation.set(rx, ry, rz);
+  m.castShadow = true; m.receiveShadow = true;
+  scene.add(m); return m;
+}
+function cyl(rt, rb, h, seg, material, x, y, z) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), material);
+  m.position.set(x, y, z);
+  m.castShadow = true; m.receiveShadow = true;
+  scene.add(m); return m;
+}
+
+// ─── ROOM GEOMETRY ───────────────────────────────────────────────────────────
+const RW = 9, RD = 10, RH = 3.2;
+
+// Floor
+box(RW, 0.05, RD, M.floor, 0, 0, 0);
+
+// Ceiling
+box(RW, 0.05, RD, M.ceiling, 0, RH, 0);
+
+// Walls
+box(RW, RH, 0.1, M.wall, 0, RH/2, -RD/2);      // back
+box(RW, RH, 0.1, M.wall, 0, RH/2,  RD/2);      // front
+box(0.1, RH, RD, M.wall, -RW/2, RH/2, 0);       // left
+box(0.1, RH, RD, M.wall,  RW/2, RH/2, 0);       // right
+
+// Baseboards
+box(RW, 0.12, 0.04, M.trim, 0, 0.06, -RD/2+0.07);
+box(RW, 0.12, 0.04, M.trim, 0, 0.06,  RD/2-0.07);
+box(0.04, 0.12, RD, M.trim, -RW/2+0.07, 0.06, 0);
+box(0.04, 0.12, RD, M.trim,  RW/2-0.07, 0.06, 0);
+
+// ─── RUG ─────────────────────────────────────────────────────────────────────
+box(4.5, 0.015, 3.2, M.rug, 0.5, 0.028, 1.2);
+
+// ─── WINDOW (back wall) ───────────────────────────────────────────────────────
+// Window frame
+box(2.4, 0.08, 0.12, M.frame, 0, 2.0, -RD/2+0.04);  // top
+box(2.4, 0.08, 0.12, M.frame, 0, 0.85, -RD/2+0.04); // bottom
+box(0.08, 1.22, 0.12, M.frame, -1.16, 1.43, -RD/2+0.04); // left
+box(0.08, 1.22, 0.12, M.frame,  1.16, 1.43, -RD/2+0.04); // right
+box(0.08, 1.22, 0.12, M.frame,  0,    1.43, -RD/2+0.04); // center divider
+// Glass panes
+box(1.0,  1.1, 0.03, M.window,  -0.58, 1.43, -RD/2+0.03);
+box(1.0,  1.1, 0.03, M.window,   0.58, 1.43, -RD/2+0.03);
+// Glow behind window (nighttime city sky)
+box(2.2, 1.1, 0.01, M.windowGlow, 0, 1.43, -RD/2-0.05);
+
+// Curtains
+box(0.7, 1.5, 0.06, M.curtain,  -1.55, 1.3, -RD/2+0.1);
+box(0.7, 1.5, 0.06, M.curtainL,  1.55, 1.3, -RD/2+0.1);
+// Curtain rod
+cyl(0.015, 0.015, 3.2, 8, M.lampbase, 0, 2.12, -RD/2+0.1);
+
+// ─── STARS outside window ─────────────────────────────────────────────────────
+const starPositions = [];
+for (let i = 0; i < 60; i++) {
+  starPositions.push(
+    (Math.random() - 0.5) * 2.0,
+    0.7 + Math.random() * 0.8,
+    -RD/2 - 0.3 - Math.random() * 0.5
+  );
+}
+const starGeo = new THREE.BufferGeometry();
+starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 0.012, transparent: true, opacity: 0.7 });
+scene.add(new THREE.Points(starGeo, starMat));
+
+// ─── BED ──────────────────────────────────────────────────────────────────────
+// Frame
+box(2.2, 0.28, 3.4, M.darkwood, -2.8, 0.14, -0.2);
+// Mattress
+box(2.0, 0.22, 3.1, M.bed, -2.8, 0.41, -0.2);
+// Sheet (rumpled slightly)
+box(1.95, 0.12, 2.0, M.bedsheet, -2.8, 0.56, 0.35, -0.04, 0, 0.01);
+// Pillows
+box(0.75, 0.14, 0.5, M.pillow, -2.4, 0.57, -1.55, 0.02, 0, -0.015);
+box(0.75, 0.14, 0.5, M.pillow, -3.1, 0.57, -1.55, -0.015, 0, 0.02);
+// Headboard
+box(2.2, 0.8, 0.1, M.darkwood, -2.8, 0.7, -1.9);
+
+// ─── BEDSIDE TABLE ────────────────────────────────────────────────────────────
+box(0.6, 0.52, 0.5, M.wood, -1.45, 0.26, -1.55);
+// drawer
+box(0.52, 0.14, 0.02, M.darkwood, -1.45, 0.3, -1.28);
+
+// ─── BEDSIDE LAMP ─────────────────────────────────────────────────────────────
+cyl(0.04, 0.06, 0.38, 8, M.lampbase, -1.45, 0.71, -1.55);
+cyl(0.18, 0.12, 0.26, 12, M.lampshade, -1.45, 0.96, -1.55);
+cyl(0.04, 0.04, 0.01, 12, M.bulb, -1.45, 0.84, -1.55);
+
+// ─── DESK AREA ────────────────────────────────────────────────────────────────
+box(1.8, 0.06, 0.75, M.desk, 2.5, 0.78, -2.0);
+// Desk legs
+box(0.06, 0.78, 0.06, M.darkwood, 1.65, 0.39, -1.68);
+box(0.06, 0.78, 0.06, M.darkwood, 3.35, 0.39, -1.68);
+box(0.06, 0.78, 0.06, M.darkwood, 1.65, 0.39, -2.32);
+box(0.06, 0.78, 0.06, M.darkwood, 3.35, 0.39, -2.32);
+
+// Chair
+box(0.7, 0.06, 0.7, M.wood, 2.5, 0.5, -1.1);
+box(0.06, 0.52, 0.06, M.darkwood, 2.18, 0.25, -0.78);
+box(0.06, 0.52, 0.06, M.darkwood, 2.82, 0.25, -0.78);
+box(0.06, 0.52, 0.06, M.darkwood, 2.18, 0.25, -1.42);
+box(0.06, 0.52, 0.06, M.darkwood, 2.82, 0.25, -1.42);
+box(0.7, 0.55, 0.06, M.wood, 2.5, 0.78, -1.42);  // backrest
+
+// Monitor
+box(0.06, 0.7, 1.1, M.monitor, 2.5, 1.22, -2.02);
+box(0.04, 0.62, 1.0, M.monitorGL, 2.46, 1.22, -2.02);
+box(0.3, 0.06, 0.4, M.darkwood, 2.5, 0.84, -2.02); // stand base
+box(0.06, 0.14, 0.06, M.darkwood, 2.5, 0.9, -2.02); // stand neck
+
+// Keyboard
+box(0.04, 0.04, 0.9, M.keyboard, 2.5, 0.82, -1.8);
+
+// Books on desk
+for (let i = 0; i < 3; i++) {
+  box(0.06, 0.22, 0.32, M.book[i], 3.15 + i * 0.1, 0.92, -1.95, 0, 0, (Math.random()-0.5)*0.15);
+}
+
+// Desk lamp
+cyl(0.025, 0.035, 0.5, 8, M.lampbase, 1.7, 1.03, -1.95);
+box(0.3, 0.04, 0.22, M.lampbase, 1.7, 1.3, -2.0, 0.25, 0, 0);
+cyl(0.14, 0.1, 0.2, 10, M.lampshade, 1.7, 1.42, -2.05);
+cyl(0.025, 0.025, 0.01, 10, M.bulb, 1.7, 1.32, -2.05);
+
+// ─── BOOKSHELF ────────────────────────────────────────────────────────────────
+box(0.08, 2.2, 1.2, M.darkwood, -4.44, 1.1, 1.8);  // left side
+box(0.08, 2.2, 1.2, M.darkwood, -3.64, 1.1, 1.8);  // right side (narrower shelf)
+
+// Shelves
+for (let s = 0; s < 4; s++) {
+  box(0.06, 0.06, 1.2, M.darkwood, -4.04, 0.3 + s * 0.5, 1.8);
+}
+// Books on shelves
+const bookColors = [0x5a1010, 0x10401a, 0x1a2050, 0x4a3208, 0x3a1838, 0x6a4020, 0x1a4040];
+for (let s = 0; s < 3; s++) {
+  let bx = -4.4;
+  for (let b = 0; b < 5 + Math.floor(Math.random()*3); b++) {
+    const bw = 0.05 + Math.random() * 0.03;
+    const bh = 0.28 + Math.random() * 0.14;
+    box(0.06, bh, bw, M.book[b % M.book.length], bx + bw/2, 0.58 + s * 0.5, 1.8, 0, 0, (Math.random()-0.5)*0.06);
+    bx += bw + 0.005;
+    if (bx > -3.7) break;
+  }
+}
+
+// ─── COUCH ────────────────────────────────────────────────────────────────────
+box(2.8, 0.42, 0.9, M.couch, 0.4, 0.21, 3.5);     // seat
+box(2.8, 0.7, 0.18, M.couch, 0.4, 0.56, 3.94);     // back
+box(0.22, 0.7, 0.9, M.couch, -0.98, 0.35, 3.5);    // left arm
+box(0.22, 0.7, 0.9, M.couch,  1.82, 0.35, 3.5);    // right arm
+// Cushions
+box(1.2, 0.15, 0.72, M.cushion, -0.22, 0.49, 3.48, 0.04);
+box(1.2, 0.15, 0.72, M.cushion,  1.04, 0.49, 3.48, -0.03, 0, 0.02);
+// Throw pillow
+box(0.34, 0.22, 0.34, M.pillow, -0.8, 0.6, 3.55, 0.1, 0.3, 0.05);
+
+// Coffee table
+box(1.3, 0.06, 0.65, M.desk, 0.4, 0.34, 2.4);
+box(0.06, 0.34, 0.06, M.darkwood, -0.2, 0.17, 2.1);
+box(0.06, 0.34, 0.06, M.darkwood,  1.0, 0.17, 2.1);
+box(0.06, 0.34, 0.06, M.darkwood, -0.2, 0.17, 2.7);
+box(0.06, 0.34, 0.06, M.darkwood,  1.0, 0.17, 2.7);
+
+// ─── MUG ON COFFEE TABLE ─────────────────────────────────────────────────────
+cyl(0.065, 0.055, 0.13, 12, M.mug, 0.2, 0.41, 2.4);
+cyl(0.05, 0.04, 0.06, 12, M.mugInner, 0.2, 0.45, 2.4);
+
+// ─── CANDLE ──────────────────────────────────────────────────────────────────
+cyl(0.04, 0.04, 0.12, 10, M.candle, 0.6, 0.4, 2.4);
+cyl(0.008, 0.002, 0.04, 6, M.flame, 0.6, 0.48, 2.4);
+
+// ─── PLANT (corner) ──────────────────────────────────────────────────────────
+cyl(0.18, 0.14, 0.34, 10, M.pot, 3.6, 0.17, 3.5);
+cyl(0.12, 0.10, 0.12, 10, M.soil, 3.6, 0.35, 3.5);
+// Leaves (simple boxes angled out)
+const plantAngles = [0, 1.0, 2.1, 3.3, 4.5, 5.2, 0.5, 1.8, 3.0, 4.2];
+plantAngles.forEach((a, i) => {
+  const r = 0.12 + (i % 3) * 0.05;
+  const leafMat = i % 2 === 0 ? M.plant : mat(0x243820, 0.95);
+  box(0.06, 0.28 + (i%3)*0.1, 0.04, leafMat,
+    3.6 + Math.sin(a)*r, 0.52 + i*0.04, 3.5 + Math.cos(a)*r,
+    -0.5 - Math.random()*0.3, a, 0);
+});
+
+// ─── WALL ART ─────────────────────────────────────────────────────────────────
+// Frame on back wall
+box(0.06, 0.72, 1.1, M.frame, -4.42, 2.2, -1.0);
+box(0.02, 0.64, 1.02, M.artwork, -4.38, 2.2, -1.0);
+// Second smaller frame
+box(0.06, 0.6, 0.46, M.frame, -4.42, 2.25, 0.4);
+box(0.02, 0.52, 0.38, mat(0x1a1a2a, 0.6, 0, 0x101828, 0.1), -4.38, 2.25, 0.4);
+
+// ─── FLOOR LAMP ──────────────────────────────────────────────────────────────
+cyl(0.04, 0.08, 0.06, 10, M.lampbase, 3.2, 0.03, 2.2);
+cyl(0.025, 0.025, 1.55, 8, M.lampbase, 3.2, 0.81, 2.2);
+cyl(0.025, 0.025, 0.38, 8, M.lampbase, 3.2, 1.77, 2.2, 0, 0, -0.5);
+cyl(0.22, 0.16, 0.3, 12, M.lampshade, 3.0, 1.93, 2.2);
+cyl(0.04, 0.04, 0.01, 12, M.bulb, 3.0, 1.78, 2.2);
+
+// ─── SMALL SIDE TABLE (by couch) ────────────────────────────────────────────
+cyl(0.26, 0.26, 0.04, 16, M.wood, -1.6, 0.62, 3.5);
+cyl(0.04, 0.04, 0.62, 8, M.darkwood, -1.6, 0.31, 3.5);
+cyl(0.22, 0.22, 0.04, 16, M.darkwood, -1.6, 0.04, 3.5);
+
+// ─── KITCHEN COUNTER SUGGESTION (right wall) ────────────────────────────────
+box(0.14, 0.92, 2.0, M.darkwood, 4.36, 0.46, 0.5);  // counter base
+box(0.18, 0.06, 2.05, M.desk, 4.35, 0.94, 0.5);      // counter top
+// Small objects on counter
+box(0.18, 0.26, 0.18, M.mug, 3.9, 1.07, -0.1);
+cyl(0.08, 0.06, 0.22, 10, M.pot, 3.9, 1.05, 0.5);
+
+// ─── LIGHTING ────────────────────────────────────────────────────────────────
+// Ambient — very dim, blueish night
+const ambient = new THREE.AmbientLight(0x10103a, 0.35);
+scene.add(ambient);
+
+// Bedside lamp (warm, low)
+const lampLight = new THREE.PointLight(0xf0b050, 1.8, 4.0, 2);
+lampLight.position.set(-1.45, 1.1, -1.55);
+lampLight.castShadow = true;
+lampLight.shadow.mapSize.set(512, 512);
+scene.add(lampLight);
+
+// Desk lamp (cool-warm)
+const deskLight = new THREE.PointLight(0xffe0a0, 1.4, 3.5, 2);
+deskLight.position.set(1.7, 1.6, -2.05);
+deskLight.castShadow = true;
+scene.add(deskLight);
+
+// Floor lamp (warm, broader)
+const floorLight = new THREE.PointLight(0xf0c070, 1.6, 5.5, 1.8);
+floorLight.position.set(3.0, 2.0, 2.2);
+floorLight.castShadow = true;
+scene.add(floorLight);
+
+// Window blueish glow
+const windowLight = new THREE.PointLight(0x2040b0, 0.6, 4.5, 2);
+windowLight.position.set(0, 1.5, -RD/2 + 0.5);
+scene.add(windowLight);
+
+// Candle flicker light
+const candleLight = new THREE.PointLight(0xff8020, 0.5, 2.2, 2.5);
+candleLight.position.set(0.6, 0.55, 2.4);
+scene.add(candleLight);
+
+// ─── GEORGE (2D billboard sprite) ───────────────────────────────────────────
+const georgeTex = new THREE.TextureLoader().load('images/george.png');
+georgeTex.magFilter = THREE.NearestFilter;
+georgeTex.minFilter = THREE.NearestFilter;
+const georgeMat = new THREE.MeshBasicMaterial({
+  map: georgeTex,
+  side: THREE.DoubleSide,
+  transparent: true,
+  alphaTest: 0.1
+});
+// Slightly smaller than the NPC engine's default (3.2 x 4.2) — use ~1.6 x 2.1
+const georgeGeo = new THREE.PlaneGeometry(1.6, 2.1);
+const george = new THREE.Mesh(georgeGeo, georgeMat);
+george.position.set(-0.5, 1.05, 1.8); // standing near the rug/couch area
+scene.add(george);
+
+// ─── COLLISION WALLS ─────────────────────────────────────────────────────────
+const walls = [
+  // room bounds (x min/max, z min/max as planes with player radius)
+  { axis: 'x', min: -RW/2 + 0.35, max:  RW/2 - 0.35 },
+  { axis: 'z', min: -RD/2 + 0.35, max:  RD/2 - 0.35 },
+];
+// Simple AABB obstacles (x0, z0, x1, z1) — inflate by player radius 0.3
+const obstacles = [
+  // bed
+  [-4.0, -2.0, -1.7,  0.7],
+  // desk
+  [ 1.55,-2.45,  3.45,-1.55],
+  // bookshelf
+  [-4.48, 1.15, -3.55, 2.45],
+  // couch
+  [-1.1,  3.0,   2.1,  4.1],
+  // coffee table
+  [-0.3,  2.0,   1.1,  3.0],
+  // floor lamp
+  [ 2.9,  1.9,   3.5,  2.6],
+  // plant
+  [ 3.2,  3.0,   4.0,  4.1],
+  // counter
+  [ 3.95,-0.6,   4.5,  1.6],
+];
+
+// ─── MOVEMENT ────────────────────────────────────────────────────────────────
+const SPEED = 2.8;
+const vel = new THREE.Vector3();
+const _dir = new THREE.Vector3();
+
+function move(dt) {
+  const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+  const right   = new THREE.Vector3( Math.cos(yaw), 0, -Math.sin(yaw));
+  vel.set(0, 0, 0);
+  if (keys['KeyW'] || keys['ArrowUp'])    vel.addScaledVector(forward,  1);
+  if (keys['KeyS'] || keys['ArrowDown'])  vel.addScaledVector(forward, -1);
+  if (keys['KeyD'] || keys['ArrowRight']) vel.addScaledVector(right,    1);
+  if (keys['KeyA'] || keys['ArrowLeft'])  vel.addScaledVector(right,   -1);
+  if (vel.lengthSq() > 0) vel.normalize();
+  vel.multiplyScalar(SPEED * dt);
+
+  // Try X
+  let nx = camera.position.x + vel.x;
+  let nz = camera.position.z;
+  if (nx > walls[0].min && nx < walls[0].max) {
+    const blocked = obstacles.some(o => nx > o[0] && nx < o[2] && nz > o[1] && nz < o[3]);
+    if (!blocked) camera.position.x = nx;
+  }
+  // Try Z
+  nx = camera.position.x;
+  nz = camera.position.z + vel.z;
+  if (nz > walls[1].min && nz < walls[1].max) {
+    const blocked = obstacles.some(o => nx > o[0] && nx < o[2] && nz > o[1] && nz < o[3]);
+    if (!blocked) camera.position.z = nz;
+  }
+
+  camera.position.y = 1.65; // lock height
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = yaw;
+  camera.rotation.x = pitch;
+}
+
+// ─── ANIMATION ───────────────────────────────────────────────────────────────
+let last = 0;
+let t = 0;
+let gameStartTime = null;
+let ending = false;
+
+function animate(ts = 0) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((ts - last) / 1000, 0.05);
+  last = ts;
+  t += dt;
+
+  if (gameStartTime === null) gameStartTime = ts;
+  const elapsed = (ts - gameStartTime) / 1000;
+
+  move(dt);
+
+  // Billboard George to always face camera
+  george.rotation.y = Math.atan2(
+    camera.position.x - george.position.x,
+    camera.position.z - george.position.z
+  );
+
+  // Candle flicker
+  candleLight.intensity = 0.4 + 0.18 * Math.sin(t * 7.3) + 0.08 * Math.sin(t * 13.1) + 0.05 * Math.sin(t * 23.7);
+  candleLight.color.setHSL(0.07 + Math.sin(t * 5) * 0.01, 1, 0.55);
+
+  // Lamp subtle breathing
+  lampLight.intensity = 1.8 + 0.05 * Math.sin(t * 1.2);
+
+  // Stars twinkle
+  starMat.opacity = 0.55 + 0.2 * Math.sin(t * 0.9) + 0.1 * Math.sin(t * 2.3);
+
+  // 30-second fade out and redirect
+  if (!ending && elapsed >= 30) {
+    ending = true;
+    overlay.style.transition = 'opacity 2.5s ease';
+    overlay.style.background = '#000';
+    overlay.style.opacity = '1';
+    setTimeout(() => { window.location.href = 'poo.html'; }, 2600);
+  }
+
+  renderer.render(scene, camera);
+}
+
+// ─── FADE IN ─────────────────────────────────────────────────────────────────
+const overlay = document.getElementById('overlay');
+const title   = document.getElementById('title');
+const bgm     = document.getElementById('bgm');
+
+// Start music on first click or keypress
+function startBgm() { bgm.play().catch(() => {}); }
+document.addEventListener('click',   startBgm, { once: true });
+document.addEventListener('keydown', startBgm, { once: true });
+
+setTimeout(() => overlay.classList.add('fadein'), 800);
+setTimeout(() => title.classList.add('hide'), 2200);
+
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

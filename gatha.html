@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choose</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --cynical: #b5a99a;
+      --adderall: #ff4d1a;
+      --vitriol: #c8f000;
+      --bg: #0c0b09;
+      --ink: #1a1814;
+    }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.35;
+    }
+
+    /* Vignette */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(ellipse at center, transparent 40%, #000 100%);
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    .stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      position: relative;
+    }
+
+    .eyebrow {
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: 0.8rem;
+      letter-spacing: 0.4em;
+      color: #3a3530;
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeUp 1s ease forwards 0.3s;
+    }
+
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      position: relative;
+    }
+
+    .btn {
+      display: block;
+      text-decoration: none;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(4rem, 10vw, 8rem);
+      line-height: 0.9;
+      letter-spacing: 0.05em;
+      padding: 0.15em 0.5em 0.1em;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.08s ease, letter-spacing 0.2s ease;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: slideIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      z-index: 0;
+    }
+
+    .btn span {
+      position: relative;
+      z-index: 1;
+      display: block;
+      mix-blend-mode: difference;
+    }
+
+    /* CYNICAL — taupe/ash, muted dread */
+    .btn-cynical {
+      background: transparent;
+      color: var(--cynical);
+      border-left: 3px solid #2a2520;
+      animation-delay: 0.5s;
+    }
+    .btn-cynical::before { background: var(--cynical); }
+    .btn-cynical:hover {
+      color: var(--ink);
+      letter-spacing: 0.12em;
+      transform: translateX(8px);
+    }
+    .btn-cynical:hover::before { transform: scaleX(1); }
+    .btn-cynical:hover span { color: var(--bg); mix-blend-mode: normal; }
+
+    /* ADDERALL — electric fire orange */
+    .btn-adderall {
+      background: transparent;
+      color: var(--adderall);
+      border-left: 3px solid #3a1a0a;
+      animation-delay: 0.7s;
+    }
+    .btn-adderall::before { background: var(--adderall); }
+    .btn-adderall:hover {
+      letter-spacing: 0.2em;
+      transform: translateX(8px);
+    }
+    .btn-adderall:hover::before { transform: scaleX(1); }
+    .btn-adderall:hover span { color: #fff; mix-blend-mode: normal; }
+    .btn-adderall::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--adderall);
+      opacity: 0;
+      filter: blur(30px);
+      transition: opacity 0.4s ease;
+      z-index: -1;
+    }
+    .btn-adderall:hover::after { opacity: 0.25; }
+
+    /* VITRIOL — acid green, caustic */
+    .btn-vitriol {
+      background: transparent;
+      color: var(--vitriol);
+      border-left: 3px solid #2a3000;
+      animation-delay: 0.9s;
+    }
+    .btn-vitriol::before { background: var(--vitriol); }
+    .btn-vitriol:hover {
+      letter-spacing: 0.08em;
+      transform: translateX(8px) skewX(-2deg);
+    }
+    .btn-vitriol:hover::before { transform: scaleX(1); }
+    .btn-vitriol:hover span { color: #000; mix-blend-mode: normal; }
+    .btn-vitriol::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--vitriol);
+      opacity: 0;
+      filter: blur(40px);
+      transition: opacity 0.4s ease;
+      z-index: -1;
+    }
+    .btn-vitriol:hover::after { opacity: 0.12; }
+
+    /* Active press */
+    .btn:active { transform: translateX(4px) scale(0.98) !important; }
+
+    /* Horizontal rule between buttons */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: #1e1b17;
+      opacity: 0;
+      animation: fadeIn 0.5s ease forwards 1s;
+    }
+
+    /* Side label */
+    .side-text {
+      position: fixed;
+      right: 2rem;
+      bottom: 2rem;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      font-size: 0.7rem;
+      color: #2a2520;
+      letter-spacing: 0.2em;
+      writing-mode: vertical-rl;
+      opacity: 0;
+      animation: fadeIn 1s ease forwards 1.5s;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-40px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <p class="eyebrow">select your disposition</p>
+    <nav class="buttons">
+      <a href="xerxes.html" class="btn btn-cynical"><span>Cynical</span></a>
+      <div class="divider"></div>
+      <a href="of.html" class="btn btn-adderall"><span>Adderall</span></a>
+      <div class="divider"></div>
+      <a href="783.html" class="btn btn-vitriol"><span>Vitriol</span></a>
+    </nav>
+  </div>
+  <span class="side-text">proceed with intention</span>
+</body>
+</html>

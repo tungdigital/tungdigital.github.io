@@ -1,0 +1,2651 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tung Digital — Digital Solutions</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <meta name="description"
+    content="Tung Digital — A London-based digital studio building websites, brands, and marketing strategies that drive real results.">
+  <meta name="keywords" content="web design London, branding agency, digital studio, UI/UX design, Tung Digital">
+  <meta name="author" content="Tung Digital Ltd">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://tungdigital.github.io">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Tung Digital">
+  <meta property="og:title" content="Tung Digital — Digital Solutions">
+  <meta property="og:description"
+    content="A London-based digital studio building websites, brands, and marketing strategies that drive real results.">
+  <meta property="og:url" content="https://tungdigital.github.io">
+  <meta property="og:image" content="https://YOUR_DOMAIN.com/additional/og-preview.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Tung Digital — Digital Solutions">
+  <meta property="og:locale" content="en_GB">
+
+  <!-- Twitter / X Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@TungDigital">
+  <meta name="twitter:creator" content="@TungDigital">
+  <meta name="twitter:title" content="Tung Digital — Digital Solutions">
+  <meta name="twitter:description"
+    content="A London-based digital studio building websites, brands, and marketing strategies that drive real results.">
+  <meta name="twitter:image" content="https://YOUR_DOMAIN.com/additional/og-preview.jpg">
+  <meta name="twitter:image:alt" content="Tung Digital — Digital Solutions">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0a0a0f;
+      --paper: #f4f1eb;
+      --accent: #e8441a;
+      --accent2: #1a3ce8;
+      --mid: #6b6b7a;
+      --light: #e8e5df;
+      --white: #ffffff;
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* CUSTOM CURSOR */
+    .cursor {
+      position: fixed;
+      width: 12px;
+      height: 12px;
+      background: var(--accent);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: width 0.2s, height 0.2s, background 0.2s;
+      mix-blend-mode: multiply;
+    }
+
+    .cursor-ring {
+      position: fixed;
+      width: 36px;
+      height: 36px;
+      border: 1.5px solid var(--ink);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: width 0.35s cubic-bezier(.25, .8, .25, 1), height 0.35s cubic-bezier(.25, .8, .25, 1), transform 0.07s;
+    }
+
+    body:hover .cursor {
+      opacity: 1;
+    }
+
+    a:hover~.cursor,
+    button:hover~.cursor {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* NOISE OVERLAY */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9997;
+      opacity: 0.4;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      padding: 24px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      mix-blend-mode: multiply;
+    }
+
+    nav.scrolled {
+      background: rgba(244, 241, 235, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--light);
+      mix-blend-mode: normal;
+      padding: 16px 60px;
+      transition: all 0.4s;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      cursor: none;
+    }
+
+    .logo-mark {
+      width: 38px;
+      height: 38px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .logo-mark svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .logo-text {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      line-height: 1;
+    }
+
+    .logo-text span {
+      color: var(--accent);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 40px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--ink);
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      position: relative;
+      cursor: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 1.5px;
+      background: var(--accent);
+      transition: width 0.3s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .nav-links a:hover::after,
+    .nav-links a.active::after {
+      width: 100%;
+    }
+
+    .nav-cta {
+      background: var(--ink);
+      color: var(--paper) !important;
+      padding: 10px 24px;
+      border-radius: 2px;
+      font-weight: 500 !important;
+      transition: background 0.2s !important;
+      cursor: none;
+    }
+
+    .nav-cta:hover {
+      background: var(--accent) !important;
+    }
+
+    .nav-cta::after {
+      display: none !important;
+    }
+
+    /* PAGE SYSTEM */
+    .page {
+      display: none;
+      min-height: 100vh;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    /* ========== HOME PAGE ========== */
+    #home {
+      background: var(--paper);
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 0 60px;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(10, 10, 15, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(10, 10, 15, 0.06) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    .hero-accent-blob {
+      position: absolute;
+      right: -100px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(232, 68, 26, 0.12) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .hero-left {
+      position: relative;
+      z-index: 1;
+      padding-top: 100px;
+    }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 28px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+
+    .hero-eyebrow::before {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(3rem, 5vw, 5.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.35s forwards;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--accent);
+      position: relative;
+      display: inline-block;
+    }
+
+    h1 em::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--accent);
+      opacity: 0.25;
+    }
+
+    .hero-desc {
+      font-size: 1.05rem;
+      color: var(--mid);
+      line-height: 1.7;
+      max-width: 440px;
+      margin-bottom: 48px;
+      font-weight: 300;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.5s forwards;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.65s forwards;
+    }
+
+    .btn-primary {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 16px 36px;
+      border: none;
+      border-radius: 2px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: none;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent);
+      transform: translateX(-101%);
+      transition: transform 0.3s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .btn-primary:hover::after {
+      transform: translateX(0);
+    }
+
+    .btn-primary span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn-ghost {
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: none;
+      transition: gap 0.2s;
+    }
+
+    .btn-ghost:hover {
+      gap: 14px;
+    }
+
+    .btn-ghost .arrow {
+      font-size: 1.1rem;
+    }
+
+    .hero-right {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-top: 100px;
+    }
+
+    .hero-visual {
+      width: 100%;
+      max-width: 500px;
+      aspect-ratio: 1;
+      position: relative;
+      opacity: 0;
+      animation: fadeIn 1.2s 0.8s forwards;
+    }
+
+    .hero-visual-ring {
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(10, 10, 15, 0.12);
+      border-radius: 50%;
+      animation: spin 20s linear infinite;
+    }
+
+    .hero-visual-ring:nth-child(2) {
+      inset: 40px;
+      border-color: rgba(232, 68, 26, 0.2);
+      animation-direction: reverse;
+      animation-duration: 15s;
+    }
+
+    .hero-visual-ring:nth-child(3) {
+      inset: 80px;
+      border-color: rgba(26, 60, 232, 0.15);
+      animation-duration: 25s;
+    }
+
+    .hero-visual-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-visual-logo {
+      width: 120px;
+      height: 120px;
+      background: var(--ink);
+      border-radius: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 30px 80px rgba(10, 10, 15, 0.25);
+    }
+
+    .hero-visual-logo svg {
+      width: 70px;
+      height: 70px;
+    }
+
+    .orbit-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .orbit-dot:nth-child(1) {
+      top: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .orbit-dot:nth-child(2) {
+      bottom: 5%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent2);
+    }
+
+    .orbit-dot:nth-child(3) {
+      left: 5%;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--ink);
+    }
+
+    /* STATS BAR */
+    .stats-bar {
+      border-top: 1px solid var(--light);
+      border-bottom: 1px solid var(--light);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin: 0 60px;
+    }
+
+    .stat-item {
+      padding: 40px 0;
+      text-align: center;
+      border-right: 1px solid var(--light);
+    }
+
+    .stat-item:last-child {
+      border-right: none;
+    }
+
+    .stat-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 2.5rem;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .stat-num span {
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--mid);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* SERVICES PREVIEW */
+    .section {
+      padding: 120px 60px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 72px;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::before {
+      content: '';
+      width: 20px;
+      height: 1px;
+      background: var(--accent);
+    }
+
+    h2 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2rem, 3.5vw, 3.2rem);
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--light);
+      border: 2px solid var(--light);
+    }
+
+    .service-card {
+      background: var(--paper);
+      padding: 48px 40px;
+      position: relative;
+      overflow: hidden;
+      cursor: none;
+      transition: background 0.3s;
+    }
+
+    .service-card::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .service-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .service-card:hover {
+      background: var(--white);
+    }
+
+    .service-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--ink);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 28px;
+      font-size: 1.4rem;
+      transition: background 0.3s;
+    }
+
+    .service-card:hover .service-icon {
+      background: var(--accent);
+    }
+
+    .service-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+
+    .service-desc {
+      font-size: 0.9rem;
+      color: var(--mid);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    .service-num {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      font-family: 'Syne', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      color: rgba(10, 10, 15, 0.04);
+      line-height: 1;
+      letter-spacing: -0.04em;
+      transition: color 0.3s;
+    }
+
+    .service-card:hover .service-num {
+      color: rgba(232, 68, 26, 0.06);
+    }
+
+    /* MARQUEE */
+    .marquee-strip {
+      background: var(--ink);
+      padding: 18px 0;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .marquee-track {
+      display: inline-flex;
+      animation: marquee 18s linear infinite;
+    }
+
+    .marquee-item {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 0.8rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--paper);
+      padding: 0 36px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .marquee-item::after {
+      content: '✦';
+      color: var(--accent);
+      font-size: 0.7rem;
+    }
+
+    /* HOME FEATURED WORK */
+    .work-strip {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 2px;
+      background: var(--light);
+      margin-bottom: 2px;
+    }
+
+    .work-card {
+      position: relative;
+      overflow: hidden;
+      cursor: none;
+      aspect-ratio: 16/9;
+    }
+
+    .work-card-bg {
+      position: absolute;
+      inset: 0;
+      transition: transform 0.6s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .work-card:hover .work-card-bg {
+      transform: scale(1.04);
+    }
+
+    .work-card-bg.bg1 {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+    }
+
+    .work-card-bg.bg2 {
+      background: linear-gradient(135deg, #0d0d0d 0%, #1a0a0a 50%, #2d0a0a 100%);
+    }
+
+    .work-card-bg.bg3 {
+      background: linear-gradient(135deg, #0a1628 0%, #102045 50%, #0f2d57 100%);
+    }
+
+    .work-card-bg.bg4 {
+      background: linear-gradient(135deg, #0d0d0d 0%, #1a1a0a 50%, #2d2d0a 100%);
+    }
+
+    .work-card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(10, 10, 15, 0.85) 0%, transparent 60%);
+    }
+
+    .work-card-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 32px;
+    }
+
+    .work-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(232, 68, 26, 0.4);
+      padding: 4px 12px;
+      border-radius: 2px;
+      margin-bottom: 10px;
+    }
+
+    .work-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--white);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .work-card-small .work-title {
+      font-size: 1.05rem;
+    }
+
+    /* FLOATING DECORATIVE ELEMENTS IN WORK CARDS */
+    .work-deco {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      opacity: 0.07;
+      pointer-events: none;
+    }
+
+    .work-deco svg {
+      width: 180px;
+      height: 180px;
+    }
+
+    /* ========== ABOUT PAGE ========== */
+    #about {
+      background: var(--paper);
+    }
+
+    .about-hero {
+      padding: 160px 60px 80px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+      border-bottom: 1px solid var(--light);
+    }
+
+    .about-hero h1 {
+      font-size: clamp(2.5rem, 4vw, 4.5rem);
+    }
+
+    .about-hero-right p {
+      font-size: 1.05rem;
+      line-height: 1.8;
+      color: var(--mid);
+      margin-bottom: 24px;
+      font-weight: 300;
+    }
+
+    .about-visual {
+      position: relative;
+      padding: 80px 60px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      background: var(--light);
+      margin: 0 60px;
+      margin-top: 80px;
+    }
+
+    .about-card {
+      background: var(--paper);
+      padding: 48px 40px;
+    }
+
+    .about-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.3rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .about-card p {
+      font-size: 0.9rem;
+      color: var(--mid);
+      line-height: 1.7;
+      font-weight: 300;
+    }
+
+    .about-card-accent {
+      background: var(--ink);
+    }
+
+    .about-card-accent h3 {
+      color: var(--paper);
+    }
+
+    .about-card-accent p {
+      color: rgba(244, 241, 235, 0.6);
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      background: var(--light);
+      margin-top: 2px;
+    }
+
+    .value-card {
+      background: var(--paper);
+      padding: 40px 32px;
+      border-bottom: 3px solid transparent;
+      transition: border-color 0.3s, background 0.3s;
+      cursor: none;
+    }
+
+    .value-card:hover {
+      border-color: var(--accent);
+      background: var(--white);
+    }
+
+    .value-icon {
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+    }
+
+    .value-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 12px;
+    }
+
+    .value-desc {
+      font-size: 0.85rem;
+      color: var(--mid);
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    .team-section {
+      padding: 120px 60px;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      margin-top: 72px;
+    }
+
+    .team-card {
+      cursor: none;
+    }
+
+    .team-avatar {
+      aspect-ratio: 3/4;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 20px;
+      background: var(--light);
+    }
+
+    .team-avatar-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.5s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .team-card:hover .team-avatar-inner {
+      transform: scale(1.04);
+    }
+
+    .team-avatar-bg {
+      position: absolute;
+      inset: 0;
+    }
+
+    .av1 {
+      background: linear-gradient(135deg, #e8441a22, #1a3ce822);
+    }
+
+    .av2 {
+      background: linear-gradient(135deg, #1a3ce822, #0a0a0f22);
+    }
+
+    .av3 {
+      background: linear-gradient(135deg, #0a0a0f22, #e8441a22);
+    }
+
+    .av4 {
+      background: linear-gradient(135deg, #e8441a11, #1a3ce811);
+    }
+
+    .team-initials {
+      font-family: 'Syne', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--ink);
+      opacity: 0.2;
+      position: relative;
+      z-index: 1;
+    }
+
+    .team-avatar-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      z-index: 2;
+    }
+
+    .team-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--accent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .team-card:hover .team-bar {
+      transform: scaleX(1);
+    }
+
+    .team-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+
+    .team-role {
+      font-size: 0.82rem;
+      color: var(--accent);
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+
+    /* ========== SERVICES PAGE ========== */
+    #services {
+      background: var(--paper);
+    }
+
+    .services-hero {
+      background: var(--ink);
+      padding: 160px 60px 100px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .services-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(244, 241, 235, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(244, 241, 235, 0.04) 1px, transparent 1px);
+      background-size: 50px 50px;
+    }
+
+    .services-hero h1 {
+      font-size: clamp(3rem, 5vw, 5rem);
+      color: var(--paper);
+      max-width: 700px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .services-hero p {
+      font-size: 1.1rem;
+      color: rgba(244, 241, 235, 0.6);
+      max-width: 500px;
+      line-height: 1.7;
+      margin-top: 28px;
+      font-weight: 300;
+      position: relative;
+      z-index: 1;
+    }
+
+    .services-hero-deco {
+      position: absolute;
+      right: 60px;
+      bottom: -60px;
+      width: 300px;
+      height: 300px;
+      border: 1px solid rgba(244, 241, 235, 0.1);
+      border-radius: 50%;
+      z-index: 1;
+    }
+
+    .services-hero-deco::before {
+      content: '';
+      position: absolute;
+      inset: 40px;
+      border: 1px solid rgba(232, 68, 26, 0.3);
+      border-radius: 50%;
+    }
+
+    .service-full {
+      padding: 80px 60px;
+      border-bottom: 1px solid var(--light);
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 80px;
+      align-items: start;
+    }
+
+    .service-full:last-child {
+      border-bottom: none;
+    }
+
+    .service-full-left {}
+
+    .service-full-num {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 5rem;
+      letter-spacing: -0.06em;
+      color: var(--light);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .service-full-name {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 16px;
+    }
+
+    .service-full-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(232, 68, 26, 0.3);
+      padding: 5px 14px;
+      border-radius: 2px;
+    }
+
+    .service-full-right {}
+
+    .service-full-desc {
+      font-size: 1rem;
+      color: var(--mid);
+      line-height: 1.8;
+      margin-bottom: 40px;
+      font-weight: 300;
+    }
+
+    .service-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 20px;
+      background: var(--white);
+      border: 1px solid var(--light);
+      border-radius: 2px;
+    }
+
+    .feature-bullet {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      margin-top: 6px;
+      flex-shrink: 0;
+    }
+
+    .feature-text {
+      font-size: 0.88rem;
+      color: var(--ink);
+      line-height: 1.5;
+      font-weight: 400;
+    }
+
+    /* ========== WORK PAGE ========== */
+    #work {
+      background: var(--paper);
+    }
+
+    .work-hero {
+      padding: 160px 60px 80px;
+      border-bottom: 1px solid var(--light);
+    }
+
+    .work-hero h1 {
+      font-size: clamp(2.5rem, 4.5vw, 5rem);
+      max-width: 600px;
+    }
+
+    .work-filter {
+      display: flex;
+      gap: 4px;
+      margin-top: 48px;
+    }
+
+    .filter-btn {
+      padding: 10px 24px;
+      border: 1px solid var(--light);
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: none;
+      border-radius: 2px;
+      transition: all 0.2s;
+      letter-spacing: 0.03em;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+
+    .work-masonry {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-template-rows: auto;
+      gap: 2px;
+      background: var(--light);
+      padding: 2px;
+      margin: 0;
+    }
+
+    .work-item {
+      background: var(--paper);
+      position: relative;
+      overflow: hidden;
+      cursor: none;
+    }
+
+    .work-item:nth-child(1) {
+      grid-column: span 8;
+      aspect-ratio: 16/9;
+    }
+
+    .work-item:nth-child(2) {
+      grid-column: span 4;
+      aspect-ratio: 9/16;
+    }
+
+    .work-item:nth-child(3) {
+      grid-column: span 4;
+      aspect-ratio: 1;
+    }
+
+    .work-item:nth-child(4) {
+      grid-column: span 4;
+      aspect-ratio: 1;
+    }
+
+    .work-item:nth-child(5) {
+      grid-column: span 4;
+      aspect-ratio: 1;
+    }
+
+    .work-item:nth-child(6) {
+      grid-column: span 6;
+      aspect-ratio: 16/9;
+    }
+
+    .work-item:nth-child(7) {
+      grid-column: span 6;
+      aspect-ratio: 16/9;
+    }
+
+    .work-item-bg {
+      position: absolute;
+      inset: 0;
+      transition: transform 0.6s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .work-item:hover .work-item-bg {
+      transform: scale(1.05);
+    }
+
+    .wbg1 {
+      background: linear-gradient(135deg, #0d1b2a 0%, #1b3a5c 100%);
+    }
+
+    .wbg2 {
+      background: linear-gradient(135deg, #1a0505 0%, #3d1010 100%);
+    }
+
+    .wbg3 {
+      background: linear-gradient(135deg, #050d1a 0%, #0a1e3d 100%);
+    }
+
+    .wbg4 {
+      background: linear-gradient(135deg, #0d0d05 0%, #1e1e0a 100%);
+    }
+
+    .wbg5 {
+      background: linear-gradient(135deg, #0d0519 0%, #1e0a3d 100%);
+    }
+
+    .wbg6 {
+      background: linear-gradient(135deg, #050d05 0%, #0a1e0a 100%);
+    }
+
+    .wbg7 {
+      background: linear-gradient(135deg, #19050d 0%, #3d0a1e 100%);
+    }
+
+    .work-item-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(10, 10, 15, 0.9) 0%, transparent 55%);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+
+    .work-item:hover .work-item-overlay {
+      opacity: 1;
+    }
+
+    .work-item-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 28px;
+      transform: translateY(10px);
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .work-item:hover .work-item-info {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .work-item-category {
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .work-item-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--white);
+      letter-spacing: -0.01em;
+    }
+
+    .work-deco-pattern {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.06;
+      font-family: 'Syne', sans-serif;
+      font-size: 8rem;
+      font-weight: 800;
+      color: var(--paper);
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+
+    .work-item:hover .work-deco-pattern {
+      opacity: 0.03;
+    }
+
+    /* ========== CONTACT PAGE ========== */
+    #contact {
+      background: var(--paper);
+    }
+
+    .contact-hero {
+      background: var(--ink);
+      padding: 160px 60px 100px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .contact-hero h1 {
+      font-size: clamp(3rem, 5vw, 5rem);
+      color: var(--paper);
+      max-width: 600px;
+    }
+
+    .contact-hero p {
+      font-size: 1rem;
+      color: rgba(244, 241, 235, 0.55);
+      margin-top: 20px;
+      font-weight: 300;
+      line-height: 1.7;
+      max-width: 400px;
+    }
+
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 60vh;
+    }
+
+    .contact-form-side {
+      padding: 80px 60px;
+      border-right: 1px solid var(--light);
+    }
+
+    .contact-info-side {
+      padding: 80px 60px;
+    }
+
+    .form-group {
+      margin-bottom: 28px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--mid);
+      margin-bottom: 10px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 16px 0;
+      border: none;
+      border-bottom: 1.5px solid var(--light);
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.3s;
+      cursor: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+    }
+
+    .form-input::placeholder {
+      color: rgba(107, 107, 122, 0.5);
+    }
+
+    textarea.form-input {
+      resize: none;
+      min-height: 120px;
+    }
+
+    .form-submit {
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      padding: 18px 48px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: none;
+      border-radius: 2px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+
+    .form-submit::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent);
+      transform: translateX(-101%);
+      transition: transform 0.3s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .form-submit:hover::after {
+      transform: translateX(0);
+    }
+
+    .form-submit span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .contact-info-title {
+      font-family: 'Syne', sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 40px;
+    }
+
+    .contact-detail {
+      margin-bottom: 36px;
+      padding-bottom: 36px;
+      border-bottom: 1px solid var(--light);
+    }
+
+    .contact-detail:last-child {
+      border-bottom: none;
+    }
+
+    .contact-detail-label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .contact-detail-value {
+      font-family: 'Syne', sans-serif;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--ink);
+    }
+
+    .contact-detail-sub {
+      font-size: 0.88rem;
+      color: var(--mid);
+      margin-top: 4px;
+      font-weight: 300;
+    }
+
+    .social-row {
+      display: flex;
+      gap: 12px;
+      margin-top: 48px;
+    }
+
+    .social-btn {
+      width: 44px;
+      height: 44px;
+      border: 1.5px solid var(--light);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      cursor: none;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: var(--ink);
+    }
+
+    .social-btn:hover {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+
+    /* FOOTER */
+    footer {
+      background: var(--ink);
+      padding: 60px 60px 32px;
+      color: var(--paper);
+    }
+
+    .footer-top {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr;
+      gap: 60px;
+      padding-bottom: 48px;
+      border-bottom: 1px solid rgba(244, 241, 235, 0.1);
+      margin-bottom: 32px;
+    }
+
+    .footer-brand p {
+      font-size: 0.88rem;
+      color: rgba(244, 241, 235, 0.5);
+      line-height: 1.7;
+      margin-top: 20px;
+      max-width: 280px;
+      font-weight: 300;
+    }
+
+    .footer-col-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba(244, 241, 235, 0.4);
+      margin-bottom: 20px;
+    }
+
+    .footer-links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .footer-links a {
+      color: rgba(244, 241, 235, 0.7);
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 300;
+      cursor: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--accent);
+    }
+
+    .footer-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .footer-copy {
+      font-size: 0.8rem;
+      color: rgba(244, 241, 235, 0.35);
+      font-weight: 300;
+    }
+
+    /* ANIMATIONS */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes marquee {
+      from {
+        transform: translateX(0);
+      }
+
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* SCROLL ANIMATIONS */
+    .reveal {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 0.7s cubic-bezier(.4, 0, .2, 1), transform 0.7s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* CTA BAND */
+    .cta-band {
+      background: var(--accent);
+      padding: 80px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .cta-band h2 {
+      color: var(--white);
+      max-width: 500px;
+      font-size: clamp(1.8rem, 3vw, 2.8rem);
+    }
+
+    .btn-light {
+      background: var(--white);
+      color: var(--accent);
+      padding: 18px 44px;
+      border-radius: 2px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: none;
+      border: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+      flex-shrink: 0;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-light:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    /* LOGO IN FOOTER & NAV */
+    .logo-svg-mark {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="cursor" id="cursor"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <nav id="mainNav">
+    <a href="#" class="logo" onclick="showPage('home')">
+      <div class="logo-mark">
+        <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="8" fill="#0a0a0f" />
+          <path d="M8 12H32V16H22V30H18V16H8V12Z" fill="#f4f1eb" />
+          <circle cx="30" cy="26" r="4" fill="#e8441a" />
+        </svg>
+      </div>
+      <div class="logo-text">Tung<span>.</span>Digital</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="#" onclick="showPage('home')" id="nav-home" class="active">Home</a></li>
+      <li><a href="#" onclick="showPage('about')" id="nav-about">About</a></li>
+      <li><a href="#" onclick="showPage('services')" id="nav-services">Services</a></li>
+      <li><a href="#" onclick="showPage('work')" id="nav-work">Work</a></li>
+      <li><a href="directory.html" id="nav-directory">Directory</a></li>
+      <li><a href="#" onclick="showPage('contact')" class="nav-cta" id="nav-contact">Contact Us</a></li>
+    </ul>
+  </nav>
+
+  <!-- ========== HOME ========== -->
+  <div class="page active" id="home">
+    <section class="hero">
+      <div class="hero-bg-grid"></div>
+      <div class="hero-accent-blob"></div>
+      <div class="hero-left">
+        <div class="hero-eyebrow">Digital Solutions Agency</div>
+        <h1>We Build<br><em>Digital</em><br>Futures</h1>
+        <p class="hero-desc">Tung Digital transforms ambitious brands into powerful digital presences — through
+          strategy, design, and technology that actually works.</p>
+        <div class="hero-actions">
+          <a href="#" class="btn-primary" onclick="showPage('work')"><span>See Our Work</span></a>
+          <a href="#" class="btn-ghost" onclick="showPage('contact')">Get In Touch <span class="arrow">→</span></a>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="hero-visual">
+          <div class="hero-visual-ring"></div>
+          <div class="hero-visual-ring"></div>
+          <div class="hero-visual-ring"></div>
+          <div class="hero-visual-center">
+            <div class="orbit-dot"></div>
+            <div class="orbit-dot"></div>
+            <div class="orbit-dot"></div>
+            <div class="hero-visual-logo">
+              <svg viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M10 20H60V28H38V52H32V28H10V20Z" fill="#f4f1eb" />
+                <circle cx="54" cy="46" r="8" fill="#e8441a" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="stats-bar">
+      <div class="stat-item reveal">
+        <div class="stat-num">12<span>+</span></div>
+        <div class="stat-label">Years Experience</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-num">340<span>+</span></div>
+        <div class="stat-label">Projects Delivered</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-num">98<span>%</span></div>
+        <div class="stat-label">Client Retention</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-num">24<span>/7</span></div>
+        <div class="stat-label">Support Available</div>
+      </div>
+    </div>
+
+    <section class="section">
+      <div class="section-header">
+        <div>
+          <div class="section-label">What We Do</div>
+          <h2>End-to-end digital<br>capabilities</h2>
+        </div>
+        <a href="#" class="btn-ghost" onclick="showPage('services')">View All Services <span class="arrow">→</span></a>
+      </div>
+      <div class="services-grid">
+        <div class="service-card reveal">
+          <div class="service-num">01</div>
+          <div class="service-icon">⬡</div>
+          <div class="service-title">Web Design & Development</div>
+          <div class="service-desc">Pixel-perfect websites engineered for performance, accessibility, and conversion.
+            Every pixel is intentional.</div>
+        </div>
+        <div class="service-card reveal">
+          <div class="service-num">02</div>
+          <div class="service-icon">◈</div>
+          <div class="service-title">Brand Identity</div>
+          <div class="service-desc">Strategic brand systems that communicate clearly, resonate deeply, and scale across
+            every touchpoint.</div>
+        </div>
+        <div class="service-card reveal">
+          <div class="service-num">03</div>
+          <div class="service-icon">⬢</div>
+          <div class="service-title">Digital Marketing</div>
+          <div class="service-desc">Data-driven campaigns across search, social, and display that drive measurable,
+            sustainable growth.</div>
+        </div>
+        <div class="service-card reveal">
+          <div class="service-num">04</div>
+          <div class="service-icon">◉</div>
+          <div class="service-title">Mobile Applications</div>
+          <div class="service-desc">Native and cross-platform apps crafted with obsessive attention to user experience
+            and performance.</div>
+        </div>
+        <div class="service-card reveal">
+          <div class="service-num">05</div>
+          <div class="service-icon">◎</div>
+          <div class="service-title">SEO & Analytics</div>
+          <div class="service-desc">Organic visibility strategies backed by rigorous data analysis and continuous
+            optimisation.</div>
+        </div>
+        <div class="service-card reveal">
+          <div class="service-num">06</div>
+          <div class="service-icon">⬟</div>
+          <div class="service-title">Cloud & Infrastructure</div>
+          <div class="service-desc">Scalable, secure cloud architecture that grows with your business and keeps you
+            ahead of demand.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="marquee-strip">
+      <div class="marquee-track">
+        <span class="marquee-item">Web Design</span>
+        <span class="marquee-item">Brand Strategy</span>
+        <span class="marquee-item">Mobile Apps</span>
+        <span class="marquee-item">Digital Marketing</span>
+        <span class="marquee-item">Cloud Solutions</span>
+        <span class="marquee-item">SEO Optimisation</span>
+        <span class="marquee-item">UI/UX Design</span>
+        <span class="marquee-item">E-Commerce</span>
+        <span class="marquee-item">Web Design</span>
+        <span class="marquee-item">Brand Strategy</span>
+        <span class="marquee-item">Mobile Apps</span>
+        <span class="marquee-item">Digital Marketing</span>
+        <span class="marquee-item">Cloud Solutions</span>
+        <span class="marquee-item">SEO Optimisation</span>
+        <span class="marquee-item">UI/UX Design</span>
+        <span class="marquee-item">E-Commerce</span>
+      </div>
+    </div>
+
+    <section class="section" style="padding-top: 80px;">
+      <div class="section-header">
+        <div>
+          <div class="section-label">Featured Work</div>
+          <h2>Recent projects<br>we're proud of</h2>
+        </div>
+        <a href="#" class="btn-ghost" onclick="showPage('work')">View All Work <span class="arrow">→</span></a>
+      </div>
+      <div class="work-strip reveal">
+        <div class="work-card">
+          <div class="work-card-bg bg1"></div>
+          <div class="work-deco"><svg viewBox="0 0 180 180" fill="none">
+              <circle cx="90" cy="90" r="80" stroke="white" stroke-width="1" />
+              <circle cx="90" cy="90" r="50" stroke="white" stroke-width="1" />
+              <line x1="90" y1="10" x2="90" y2="170" stroke="white" />
+              <line x1="10" y1="90" x2="170" y2="90" stroke="white" />
+            </svg></div>
+          <div class="work-card-overlay"></div>
+          <div class="work-card-content">
+            <div class="work-tag">Web Platform</div>
+            <div class="work-title">Nexus Finance — Digital Banking Redesign</div>
+          </div>
+        </div>
+        <div class="work-card work-card-small">
+          <div class="work-card-bg bg2"></div>
+          <div class="work-deco"><svg viewBox="0 0 180 180" fill="none">
+              <rect x="20" y="20" width="140" height="140" stroke="white" stroke-width="1" />
+              <rect x="50" y="50" width="80" height="80" stroke="white" stroke-width="1" />
+            </svg></div>
+          <div class="work-card-overlay"></div>
+          <div class="work-card-content">
+            <div class="work-tag">Brand Identity</div>
+            <div class="work-title">Volta Energy — Complete Brand Overhaul</div>
+          </div>
+        </div>
+      </div>
+      <div class="work-strip reveal" style="margin-top: 2px;">
+        <div class="work-card work-card-small">
+          <div class="work-card-bg bg3"></div>
+          <div class="work-card-overlay"></div>
+          <div class="work-card-content">
+            <div class="work-tag">Mobile App</div>
+            <div class="work-title">Petal Health — iOS & Android</div>
+          </div>
+        </div>
+        <div class="work-card">
+          <div class="work-card-bg bg4"></div>
+          <div class="work-deco"><svg viewBox="0 0 180 180" fill="none">
+              <polygon points="90,10 170,160 10,160" stroke="white" stroke-width="1" fill="none" />
+              <polygon points="90,40 148,140 32,140" stroke="white" stroke-width="1" fill="none" />
+            </svg></div>
+          <div class="work-card-overlay"></div>
+          <div class="work-card-content">
+            <div class="work-tag">E-Commerce</div>
+            <div class="work-title">Marché — Luxury Retail Platform</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="cta-band">
+      <h2>Ready to build something remarkable?</h2>
+      <a href="#" class="btn-light" onclick="showPage('contact')">Start a Project</a>
+    </div>
+
+    <footer>
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="logo">
+            <div class="logo-mark">
+              <svg viewBox="0 0 40 40" fill="none">
+                <rect width="40" height="40" rx="8" fill="#f4f1eb" />
+                <path d="M8 12H32V16H22V30H18V16H8V12Z" fill="#0a0a0f" />
+                <circle cx="30" cy="26" r="4" fill="#e8441a" />
+              </svg>
+            </div>
+            <div class="logo-text" style="color: var(--paper)">Tung<span>.</span>Digital</div>
+          </div>
+          <p>We build digital experiences that drive real results — for brands who refuse to settle for ordinary.</p>
+        </div>
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="showPage('about')">About Us</a></li>
+            <li><a href="#" onclick="showPage('work')">Our Work</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Blog</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Services</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="showPage('services')">Web Design</a></li>
+            <li><a href="#" onclick="showPage('services')">Brand Identity</a></li>
+            <li><a href="#" onclick="showPage('services')">Digital Marketing</a></li>
+            <li><a href="#" onclick="showPage('services')">Mobile Apps</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <ul class="footer-links">
+            <li><a href="#">hello@tungdigital.com</a></li>
+            <li><a href="#">+44 20 7946 0958</a></li>
+            <li><a href="#">London, UK</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copy">© 2026 Tung Digital Ltd. All rights reserved.</div>
+        <div class="footer-copy">Privacy Policy · Terms of Service</div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========== ABOUT ========== -->
+  <div class="page" id="about">
+    <section class="about-hero">
+      <div>
+        <div class="hero-eyebrow" style="animation: none; opacity: 1;">Who We Are</div>
+        <h1>A studio<br>built on<br><em>craft</em></h1>
+      </div>
+      <div class="about-hero-right">
+        <p>Founded in 2013, Tung Digital is an independent digital solutions studio working at the intersection of
+          design, technology, and strategy. We are a small team of specialists who care deeply about the quality of our
+          work.</p>
+        <p>We partner with ambitious founders, established businesses, and growth-stage companies who understand that
+          digital excellence is not a cost — it's a competitive advantage.</p>
+      </div>
+    </section>
+
+    <div style="margin: 80px 60px 0;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2px; background: var(--light);">
+        <div class="about-card reveal">
+          <h3>Our Mission</h3>
+          <p>To help businesses grow through thoughtful digital solutions that combine strategic clarity with
+            exceptional craft. We measure success by the impact we create for our clients, not the awards on our shelf.
+          </p>
+        </div>
+        <div class="about-card about-card-accent reveal">
+          <h3>Our Approach</h3>
+          <p>Every engagement begins with understanding — your business, your users, your goals. From there we move with
+            precision, bringing strategy and execution together without the bloat of large agencies.</p>
+        </div>
+      </div>
+      <div class="values-grid">
+        <div class="value-card reveal">
+          <div class="value-icon">◈</div>
+          <div class="value-title">Craft First</div>
+          <div class="value-desc">We hold ourselves to an uncompromisingly high standard — in design, code, and
+            communication.</div>
+        </div>
+        <div class="value-card reveal">
+          <div class="value-icon">⬡</div>
+          <div class="value-title">Honest Partnerships</div>
+          <div class="value-desc">We tell clients what they need to hear, not what they want to hear. Transparency
+            builds trust.</div>
+        </div>
+        <div class="value-card reveal">
+          <div class="value-icon">◉</div>
+          <div class="value-title">Outcomes Over Output</div>
+          <div class="value-desc">We care about real-world results, not deliverable counts. Your growth is our success
+            metric.</div>
+        </div>
+        <div class="value-card reveal">
+          <div class="value-icon">⬢</div>
+          <div class="value-title">Continuous Curiosity</div>
+          <div class="value-desc">The digital landscape evolves constantly. We stay ahead so our clients never fall
+            behind.</div>
+        </div>
+      </div>
+    </div>
+
+    <section class="team-section">
+      <div class="section-label">The People</div>
+      <h2>The team behind<br>the work</h2>
+      <div class="team-grid">
+        <div class="team-card reveal">
+          <div class="team-avatar">
+            <div class="team-avatar-inner">
+              <div class="team-avatar-bg av1"></div>
+              <div class="team-initials">TN</div>
+              <img class="team-avatar-img" src="images/team1.png" alt="Tung Nguyen" onerror="this.style.display='none'">
+            </div>
+            <div class="team-bar"></div>
+          </div>
+          <div class="team-name">Jack Fitzenhugh</div>
+          <div class="team-role">Founder & Creative Director</div>
+        </div>
+        <div class="team-card reveal">
+          <div class="team-avatar">
+            <div class="team-avatar-inner">
+              <div class="team-avatar-bg av2"></div>
+              <div class="team-initials">SK</div>
+              <img class="team-avatar-img" src="images/team2.png" alt="Sara Kim" onerror="this.style.display='none'">
+            </div>
+            <div class="team-bar"></div>
+          </div>
+          <div class="team-name">Jug Production</div>
+          <div class="team-role">Head of Strategy</div>
+        </div>
+        <div class="team-card reveal">
+          <div class="team-avatar">
+            <div class="team-avatar-inner">
+              <div class="team-avatar-bg av3"></div>
+              <div class="team-initials">MP</div>
+              <img class="team-avatar-img" src="images/team3.png" alt="Marco Pellini"
+                onerror="this.style.display='none'">
+            </div>
+            <div class="team-bar"></div>
+          </div>
+          <div class="team-name">Lewis Burger</div>
+          <div class="team-role">Lead Engineer</div>
+        </div>
+        <div class="team-card reveal">
+          <div class="team-avatar">
+            <div class="team-avatar-inner">
+              <div class="team-avatar-bg av4"></div>
+              <div class="team-initials">AO</div>
+              <img class="team-avatar-img" src="images/team4.png" alt="Aisha Oduya" onerror="this.style.display='none'">
+            </div>
+            <div class="team-bar"></div>
+          </div>
+          <div class="team-name">Raymond Grace Hana</div>
+          <div class="team-role">Brand Designer</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="cta-band">
+      <h2>Join us — we're always<br>looking for great talent</h2>
+      <a href="#" class="btn-light" onclick="showPage('contact')">Get In Touch</a>
+    </div>
+
+    <footer>
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="logo">
+            <div class="logo-mark"><svg viewBox="0 0 40 40" fill="none">
+                <rect width="40" height="40" rx="8" fill="#f4f1eb" />
+                <path d="M8 12H32V16H22V30H18V16H8V12Z" fill="#0a0a0f" />
+                <circle cx="30" cy="26" r="4" fill="#e8441a" />
+              </svg></div>
+            <div class="logo-text" style="color:var(--paper)">Tung<span>.</span>Digital</div>
+          </div>
+          <p>We build digital experiences that drive real results — for brands who refuse to settle for ordinary.</p>
+        </div>
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="showPage('about')">About</a></li>
+            <li><a href="#" onclick="showPage('work')">Work</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Blog</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Services</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="showPage('services')">Web Design</a></li>
+            <li><a href="#" onclick="showPage('services')">Branding</a></li>
+            <li><a href="#" onclick="showPage('services')">Marketing</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <ul class="footer-links">
+            <li><a href="#">hello@tungdigital.com</a></li>
+            <li><a href="#">London, UK</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copy">© 2026 Tung Digital Ltd.</div>
+        <div class="footer-copy">Privacy · Terms</div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========== SERVICES ========== -->
+  <div class="page" id="services">
+    <div class="services-hero">
+      <div class="hero-eyebrow" style="animation:none;opacity:1;color:rgba(244,241,235,0.5)">What We Offer</div>
+      <h1>Digital services<br>built to <em style="color:var(--accent)">perform</em></h1>
+      <p>From initial concept to ongoing optimisation — we cover every dimension of your digital presence.</p>
+      <div class="services-hero-deco"></div>
+    </div>
+
+    <div class="service-full reveal">
+      <div class="service-full-left">
+        <div class="service-full-num">01</div>
+        <div class="service-full-name">Web Design & Development</div>
+        <div class="service-full-tag">Core Service</div>
+      </div>
+      <div class="service-full-right">
+        <p class="service-full-desc">We design and build websites that are as powerful as they are beautiful. Every
+          project starts with a deep understanding of your audience, goals, and brand — then we translate that into a
+          digital experience that converts visitors into customers. Performance, accessibility, and SEO are built in
+          from day one, not bolted on at the end.</p>
+        <div class="service-features">
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Custom design tailored to your brand</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Mobile-first responsive development</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Performance-optimised code</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">CMS integration (WordPress, Webflow)</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">E-commerce solutions</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Ongoing support & maintenance</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="service-full reveal">
+      <div class="service-full-left">
+        <div class="service-full-num">02</div>
+        <div class="service-full-name">Brand Identity</div>
+        <div class="service-full-tag">Strategy & Design</div>
+      </div>
+      <div class="service-full-right">
+        <p class="service-full-desc">A brand is more than a logo — it's the complete impression your business makes on
+          the world. We develop comprehensive brand systems that define who you are, how you speak, and how you look
+          across every surface. The result is a brand that feels consistent, confident, and distinctly yours.</p>
+        <div class="service-features">
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Brand strategy & positioning</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Logo & visual identity design</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Typography & colour systems</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Brand guidelines documentation</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Tone of voice & messaging</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Brand collateral design</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="service-full reveal">
+      <div class="service-full-left">
+        <div class="service-full-num">03</div>
+        <div class="service-full-name">Digital Marketing</div>
+        <div class="service-full-tag">Growth</div>
+      </div>
+      <div class="service-full-right">
+        <p class="service-full-desc">Sustainable growth comes from a disciplined, data-led approach to marketing. We
+          design and execute campaigns across paid search, paid social, email, and content — always optimising toward
+          the metrics that matter for your business, not vanity numbers.</p>
+        <div class="service-features">
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">PPC & paid social management</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Email marketing automation</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Content strategy & creation</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Conversion rate optimisation</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Analytics & reporting dashboards</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Campaign strategy & planning</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="service-full reveal">
+      <div class="service-full-left">
+        <div class="service-full-num">04</div>
+        <div class="service-full-name">Mobile Applications</div>
+        <div class="service-full-tag">Product</div>
+      </div>
+      <div class="service-full-right">
+        <p class="service-full-desc">We design and build mobile applications that users love to use. Whether you need a
+          native iOS and Android app or a cross-platform solution, we bring the same level of craft and rigour to mobile
+          that we apply to every project — with a relentless focus on user experience and technical quality.</p>
+        <div class="service-features">
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">iOS & Android native development</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">React Native cross-platform</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">UX research & prototyping</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">API integration & backend</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">App Store optimisation</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-bullet"></div>
+            <div class="feature-text">Post-launch support</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-band">
+      <h2>Not sure which service<br>is right for you?</h2>
+      <a href="#" class="btn-light" onclick="showPage('contact')">Let's Talk</a>
+    </div>
+
+    <footer>
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="logo">
+            <div class="logo-mark"><svg viewBox="0 0 40 40" fill="none">
+                <rect width="40" height="40" rx="8" fill="#f4f1eb" />
+                <path d="M8 12H32V16H22V30H18V16H8V12Z" fill="#0a0a0f" />
+                <circle cx="30" cy="26" r="4" fill="#e8441a" />
+              </svg></div>
+            <div class="logo-text" style="color:var(--paper)">Tung<span>.</span>Digital</div>
+          </div>
+          <p>We build digital experiences that drive real results.</p>
+        </div>
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="showPage('about')">About</a></li>
+            <li><a href="#" onclick="showPage('work')">Work</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Services</div>
+          <ul class="footer-links">
+            <li><a href="#">Web Design</a></li>
+            <li><a href="#">Branding</a></li>
+            <li><a href="#">Marketing</a></li>
+            <li><a href="#">Mobile</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <ul class="footer-links">
+            <li><a href="#">hello@tungdigital.com</a></li>
+            <li><a href="#">London, UK</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copy">© 2026 Tung Digital Ltd.</div>
+        <div class="footer-copy">Privacy · Terms</div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========== WORK ========== -->
+  <div class="page" id="work">
+    <div class="work-hero">
+      <div class="hero-eyebrow" style="animation:none;opacity:1;">Selected Work</div>
+      <h1>Projects that<br>made a difference</h1>
+      <div class="work-filter">
+        <button class="filter-btn active">All</button>
+        <button class="filter-btn">Web</button>
+        <button class="filter-btn">Brand</button>
+        <button class="filter-btn">Mobile</button>
+        <button class="filter-btn">Marketing</button>
+      </div>
+    </div>
+
+    <div class="work-masonry reveal">
+      <div class="work-item">
+        <div class="work-item-bg wbg1"></div>
+        <div class="work-deco-pattern">01</div>
+        <div class="work-item-overlay"></div>
+        <div class="work-item-info">
+          <div class="work-item-category">Web Platform</div>
+          <div class="work-item-title">Nexus Finance — Digital Banking Redesign</div>
+        </div>
+      </div>
+      <div class="work-item">
+        <div class="work-item-bg wbg2"></div>
+        <div class="work-deco-pattern">02</div>
+        <div class="work-item-overlay"></div>
+        <div class="work-item-info">
+          <div class="work-item-category">Brand Identity</div>
+          <div class="work-item-title">Volta Energy Rebrand</div>
+        </div>
+      </div>
+      <div class="work-item">
+        <div class="work-item-bg wbg3"></div>
+        <div class="work-deco-pattern">03</div>
+        <div class="work-item-overlay"></div>
+        <div class="work-item-info">
+          <div class="work-item-category">Mobile App</div>
+          <div class="work-item-title">Petal Health iOS</div>
+        </div>
+      </div>
+      <div class="work-item">
+        <div class="work-item-bg wbg4"></div>
+        <div class="work-deco-pattern">04</div>
+        <div class="work-item-overlay"></div>
+        <div class="work-item-info">
+          <div class="work-item-category">E-Commerce</div>
+          <div class="work-item-title">Marché Retail Platform</div>
+        </div>
+      </div>
+      <div class="work-item">
+        <div class="work-item-bg wbg5"></div>
+        <div class="work-deco-pattern">05</div>
+        <div class="work-item-overlay"></div>
+        <div class="work-item-info">
+          <div class="work-item-category">Marketing</div>
+          <div class="work-item-title">Drift Coffee Growth</div>
+        </div>
+      </div>
+      <div class="work-item">
+        <div class="work-item-bg wbg6"></div>
+        <div class="work-deco-pattern">06</div>
+        <div class="work-item-overlay"></div>
+        <div class="work-item-info">
+          <div class="work-item-category">Web Design</div>
+          <div class="work-item-title">Arbour Studio Website</div>
+        </div>
+      </div>
+      <div class="work-item">
+        <div class="work-item-bg wbg7"></div>
+        <div class="work-deco-pattern">07</div>
+        <div class="work-item-overlay"></div>
+        <div class="work-item-info">
+          <div class="work-item-category">Brand Identity</div>
+          <div class="work-item-title">Solace Wellness Identity</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta-band" style="margin-top:2px">
+      <h2>Have a project in mind?<br>Let's make it happen.</h2>
+      <a href="#" class="btn-light" onclick="showPage('contact')">Start a Project</a>
+    </div>
+
+    <footer>
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="logo">
+            <div class="logo-mark"><svg viewBox="0 0 40 40" fill="none">
+                <rect width="40" height="40" rx="8" fill="#f4f1eb" />
+                <path d="M8 12H32V16H22V30H18V16H8V12Z" fill="#0a0a0f" />
+                <circle cx="30" cy="26" r="4" fill="#e8441a" />
+              </svg></div>
+            <div class="logo-text" style="color:var(--paper)">Tung<span>.</span>Digital</div>
+          </div>
+          <p>We build digital experiences that drive real results.</p>
+        </div>
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="showPage('about')">About</a></li>
+            <li><a href="#">Careers</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Services</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="showPage('services')">Web Design</a></li>
+            <li><a href="#" onclick="showPage('services')">Branding</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <ul class="footer-links">
+            <li><a href="#">hello@tungdigital.com</a></li>
+            <li><a href="#">London, UK</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copy">© 2026 Tung Digital Ltd.</div>
+        <div class="footer-copy">Privacy · Terms</div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========== CONTACT ========== -->
+  <div class="page" id="contact">
+    <div class="contact-hero">
+      <div class="hero-eyebrow" style="animation:none;opacity:1;color:rgba(244,241,235,0.4)">Get In Touch</div>
+      <h1>Let's build<br>something great</h1>
+      <p>Tell us about your project. We'll get back to you within one business day.</p>
+    </div>
+
+    <div class="contact-grid">
+      <div class="contact-form-side">
+        <div class="form-group">
+          <label class="form-label">Your Name</label>
+          <input type="text" class="form-input" placeholder="Jane Smith">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" placeholder="jane@company.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Company</label>
+          <input type="text" class="form-input" placeholder="Your Company Ltd">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Project Type</label>
+          <input type="text" class="form-input" placeholder="Web Design / Branding / Marketing...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Tell Us About Your Project</label>
+          <textarea class="form-input" placeholder="Describe your goals, timeline, and budget if known..."></textarea>
+        </div>
+        <button class="form-submit" onclick="handleFormSubmit(this)"><span>Send Message →</span></button>
+      </div>
+      <div class="contact-info-side">
+        <div class="contact-info-title">Contact Details</div>
+        <div class="contact-detail">
+          <div class="contact-detail-label">Email</div>
+          <div class="contact-detail-value">hello@tungdigital.com</div>
+          <div class="contact-detail-sub">For general & project enquiries</div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-label">Phone</div>
+          <div class="contact-detail-value">+44 20 7946 0958</div>
+          <div class="contact-detail-sub">Mon–Fri, 9am–6pm GMT</div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-label">Office</div>
+          <div class="contact-detail-value">Shoreditch, London</div>
+          <div class="contact-detail-sub">United Kingdom, EC2A 4NE</div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-label">Response Time</div>
+          <div class="contact-detail-value">Within 24 Hours</div>
+          <div class="contact-detail-sub">On business days</div>
+        </div>
+        <div class="social-row">
+          <a href="#" class="social-btn">in</a>
+          <a href="#" class="social-btn">tw</a>
+          <a href="#" class="social-btn">ig</a>
+          <a href="#" class="social-btn">gh</a>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-top">
+        <div class="footer-brand">
+          <div class="logo">
+            <div class="logo-mark"><svg viewBox="0 0 40 40" fill="none">
+                <rect width="40" height="40" rx="8" fill="#f4f1eb" />
+                <path d="M8 12H32V16H22V30H18V16H8V12Z" fill="#0a0a0f" />
+                <circle cx="30" cy="26" r="4" fill="#e8441a" />
+              </svg></div>
+            <div class="logo-text" style="color:var(--paper)">Tung<span>.</span>Digital</div>
+          </div>
+          <p>We build digital experiences that drive real results.</p>
+        </div>
+        <div>
+          <div class="footer-col-title">Company</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="showPage('about')">About</a></li>
+            <li><a href="#" onclick="showPage('work')">Work</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Services</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="showPage('services')">Web Design</a></li>
+            <li><a href="#" onclick="showPage('services')">Branding</a></li>
+          </ul>
+        </div>
+        <div>
+          <div class="footer-col-title">Contact</div>
+          <ul class="footer-links">
+            <li><a href="#">hello@tungdigital.com</a></li>
+            <li><a href="#">London, UK</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-copy">© 2026 Tung Digital Ltd.</div>
+        <div class="footer-copy">Privacy · Terms</div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // CURSOR
+    const cursor = document.getElementById('cursor');
+    const cursorRing = document.getElementById('cursorRing');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      cursor.style.left = mx + 'px';
+      cursor.style.top = my + 'px';
+    });
+    function animateRing() {
+      rx += (mx - rx) * 0.12;
+      ry += (my - ry) * 0.12;
+      cursorRing.style.left = rx + 'px';
+      cursorRing.style.top = ry + 'px';
+      requestAnimationFrame(animateRing);
+    }
+    animateRing();
+    document.querySelectorAll('a, button, .service-card, .work-card, .work-item, .team-card, .value-card, .filter-btn').forEach(el => {
+      el.addEventListener('mouseenter', () => { cursor.style.width = '20px'; cursor.style.height = '20px'; cursorRing.style.width = '60px'; cursorRing.style.height = '60px'; });
+      el.addEventListener('mouseleave', () => { cursor.style.width = '12px'; cursor.style.height = '12px'; cursorRing.style.width = '36px'; cursorRing.style.height = '36px'; });
+    });
+
+    // PAGE NAVIGATION
+    function showPage(id) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+      document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+      const navEl = document.getElementById('nav-' + id);
+      if (navEl) navEl.classList.add('active');
+      window.scrollTo(0, 0);
+      initReveal();
+      return false;
+    }
+
+    // NAV SCROLL
+    window.addEventListener('scroll', () => {
+      document.getElementById('mainNav').classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // SCROLL REVEAL
+    function initReveal() {
+      const reveals = document.querySelectorAll('.page.active .reveal');
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach((entry, i) => {
+          if (entry.isIntersecting) {
+            setTimeout(() => entry.target.classList.add('visible'), i * 80);
+          }
+        });
+      }, { threshold: 0.1 });
+      reveals.forEach(el => { el.classList.remove('visible'); observer.observe(el); });
+    }
+    initReveal();
+
+    // FILTER BUTTONS
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // FORM SUBMIT
+    function handleFormSubmit(btn) {
+      btn.querySelector('span').textContent = 'Message Sent ✓';
+      btn.style.background = '#1a3ce8';
+      btn.style.pointerEvents = 'none';
+    }
+  </script>
+</body>
+
+</html>

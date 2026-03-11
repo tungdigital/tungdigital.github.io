@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<title>Home</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; }
+  canvas { display: block; }
+  #hud {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    text-align: center;
+    text-shadow: 2px 2px 0 #000;
+    pointer-events: none;
+    letter-spacing: 2px;
+    opacity: 0.7;
+  }
+  #overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    opacity: 1;
+    pointer-events: none;
+    transition: opacity 1.5s ease;
+    z-index: 100;
+  }
+  #overlay.fade { opacity: 1; }
+  #overlay.fadein { opacity: 0; }
+
+  #prompt {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 16px;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px #fff;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 60;
+    transition: opacity 0.5s;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<audio id="bgm" src="audio/spiro.mp3" loop></audio>
+<div id="overlay"></div>
+<div id="prompt"></div>
+<div id="hud">WASD / ARROW KEYS TO MOVE &nbsp;|&nbsp; MOUSE TO LOOK</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// --- SCENE SETUP ---
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x6e7b6e);
+scene.fog = new THREE.Fog(0x6e7b6e, 8, 38);
+
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setPixelRatio(0.4); // low res PS1 look
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = false;
+document.body.appendChild(renderer.domElement);
+
+// PS1-style: snap vertices to low-res grid
+function ps1Snap(geometry, snap = 0.18) {
+  const pos = geometry.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    pos.setX(i, Math.round(pos.getX(i) / snap) * snap);
+    pos.setY(i, Math.round(pos.getY(i) / snap) * snap);
+    pos.setZ(i, Math.round(pos.getZ(i) / snap) * snap);
+  }
+  pos.needsUpdate = true;
+  return geometry;
+}
+
+// --- CAMERA ---
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 50);
+camera.position.set(0, 1.7, 0);
+
+// --- LIGHTING ---
+const ambient = new THREE.AmbientLight(0xaaaaaa, 0.85);
+scene.add(ambient);
+const dirLight = new THREE.DirectionalLight(0xfff5e0, 0.55);
+dirLight.position.set(10, 20, 10);
+scene.add(dirLight);
+
+// --- GRASS PLANE ---
+const grassMat = new THREE.MeshPhongMaterial({ color: 0x557744, flatShading: true });
+
+const planeGeo = new THREE.PlaneGeometry(400, 400, 60, 60);
+// Jitter verts for lumpy PS1 ground
+const pPos = planeGeo.attributes.position;
+for (let i = 0; i < pPos.count; i++) {
+  if (pPos.getY(i) !== undefined) {
+    pPos.setZ(i, pPos.getZ(i) + (Math.random() - 0.5) * 0.25);
+  }
+}
+planeGeo.computeVertexNormals();
+const plane = new THREE.Mesh(planeGeo, grassMat);
+plane.rotation.x = -Math.PI / 2;
+scene.add(plane);
+
+// --- SCATTERED ROCKS / BUSHES for atmosphere ---
+function makeRock(x, z, s) {
+  const geo = ps1Snap(new THREE.DodecahedronGeometry(s, 0));
+  const mat = new THREE.MeshPhongMaterial({ color: 0x888877, flatShading: true });
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, s * 0.5, z);
+  m.rotation.set(Math.random(), Math.random(), Math.random());
+  scene.add(m);
+}
+function makeBush(x, z) {
+  const s = 0.4 + Math.random() * 0.3;
+  const geo = ps1Snap(new THREE.IcosahedronGeometry(s, 0));
+  const mat = new THREE.MeshPhongMaterial({ color: 0x2d6020, flatShading: true });
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, s * 0.6, z);
+  scene.add(m);
+}
+function makeTree(x, z) {
+  const trunkGeo = ps1Snap(new THREE.CylinderGeometry(0.12, 0.18, 1.5, 5));
+  const trunkMat = new THREE.MeshPhongMaterial({ color: 0x5c3a1e, flatShading: true });
+  const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+  trunk.position.set(x, 0.75, z);
+  scene.add(trunk);
+  const topGeo = ps1Snap(new THREE.ConeGeometry(0.9, 2.2, 6, 2));
+  const topMat = new THREE.MeshPhongMaterial({ color: 0x1a5c14, flatShading: true });
+  const top = new THREE.Mesh(topGeo, topMat);
+  top.position.set(x, 2.4, z);
+  scene.add(top);
+}
+
+const rng = (a, b) => a + Math.random() * (b - a);
+
+// --- WINDING PATH WAYPOINTS ---
+// Player spawns at (0,0) facing forward (-z).
+// The path begins immediately at their feet and winds for a very long distance
+// before arriving at the house, which sits at roughly (160, -150) — far corner of the world.
+// The journey loops, doubles back, climbs across open stretches, and narrows
+// through dense tree corridors to feel like a genuine long walk.
+const pathWaypoints = [
+  [0,     0],    // spawn — path begins here
+  [0,   -18],
+  [14,  -28],
+  [26,  -18],
+  [32,   -4],
+  [20,    8],
+  [6,    16],
+  [-8,    8],
+  [-18,  20],
+  [-28,  10],
+  [-36,  24],
+  [-24,  34],
+  [-10,  30],
+  [4,    42],
+  [18,   50],
+  [32,   42],
+  [44,   52],
+  [56,   42],
+  [62,   28],
+  [52,   16],
+  [64,    4],
+  [76,   12],
+  [82,   26],
+  [74,   38],
+  [86,   46],
+  [96,   36],
+  [100,  20],
+  [90,    8],
+  [100,  -4],
+  [112,   4],
+  [118,  18],
+  [110,  30],
+  [120,  40],
+  [132,  32],
+  [136,  18],
+  [126,   4],
+  [136,  -8],
+  [148,  -2],
+  [154, -14],
+  [146, -26],
+  [134, -20],
+  [126, -32],
+  [138, -42],
+  [150, -34],
+  [158, -46],
+  [152, -60],
+  [140, -54],
+  [130, -64],
+  [142, -76],
+  [154, -68],
+  [162, -80],
+  [158, -94],
+  [146, -90],
+  [136, -100],
+  [148, -112],
+  [158, -104],
+  [164, -116],
+  [160, -130],
+  [162, -148],  // final approach — house just ahead
+];
+
+// House sits at the very end of the path, far from spawn
+const houseX = 162, houseZ = -162;
+
+// Catmull-Rom style smooth interpolation between waypoints
+function lerp2(a, b, t) {
+  return [a[0] + (b[0]-a[0])*t, a[1] + (b[1]-a[1])*t];
+}
+
+const pathMat = new THREE.MeshPhongMaterial({ color: 0x7a6a50, flatShading: true });
+const usedSpots = [];
+
+function tooClose(x, z, minDist, list) {
+  for (const s of list) {
+    const dx = s[0]-x, dz = s[1]-z;
+    if (dx*dx+dz*dz < minDist*minDist) return true;
+  }
+  return false;
+}
+
+// For each path segment, lay dirt tiles and line both sides with trees/rocks
+for (let wi = 0; wi < pathWaypoints.length - 1; wi++) {
+  const a = pathWaypoints[wi];
+  const b = pathWaypoints[wi+1];
+  const dx = b[0]-a[0], dz = b[1]-a[1];
+  const len = Math.sqrt(dx*dx+dz*dz);
+  const steps = Math.ceil(len / 1.8);
+  const nx = -dz/len, nz = dx/len; // perpendicular normal
+
+  // Vary corridor density slightly along the journey for pacing
+  const progress = wi / pathWaypoints.length;
+  const treeDensity = 0.45 + progress * 0.25; // denser toward the end
+
+  for (let s = 0; s <= steps; s++) {
+    const t = s / steps;
+    const [px, pz] = lerp2(a, b, t);
+
+    // Dirt path tile
+    const pgeo = ps1Snap(new THREE.BoxGeometry(2.2, 0.08, 2.2, 1, 1, 1));
+    const pm = new THREE.Mesh(pgeo, pathMat);
+    pm.position.set(px, 0.04, pz);
+    scene.add(pm);
+    usedSpots.push([px, pz]);
+
+    // Flanking foliage every other tile
+    if (s % 2 === 0) {
+      for (const side of [-1, 1]) {
+        const spread = 2.3 + Math.random() * 0.9;
+        const sx = px + nx * spread * side + (Math.random()-0.5)*0.5;
+        const sz = pz + nz * spread * side + (Math.random()-0.5)*0.5;
+        if (!tooClose(sx, sz, 1.8, usedSpots)) {
+          const r = Math.random();
+          if (r < treeDensity) makeTree(sx, sz);
+          else if (r < treeDensity + 0.2) makeRock(sx, sz, rng(0.2, 0.45));
+          else makeBush(sx, sz);
+          usedSpots.push([sx, sz]);
+        }
+      }
+    }
+  }
+}
+
+// Sparse background scatter across the whole world
+for (let i = 0; i < 120; i++) {
+  const x = rng(-180, 180), z = rng(-180, 20);
+  if (!tooClose(x, z, 4.0, usedSpots)) {
+    const r = Math.random();
+    if (r < 0.5) makeTree(x, z);
+    else if (r < 0.75) makeRock(x, z, rng(0.2, 0.5));
+    else makeBush(x, z);
+    usedSpots.push([x, z]);
+  }
+}
+
+// House base walls (low-poly box)
+function makeWall(w, h, d, x, y, z, color) {
+  const geo = ps1Snap(new THREE.BoxGeometry(w, h, d, 2, 2, 2));
+  const mat = new THREE.MeshPhongMaterial({ color, flatShading: true });
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  scene.add(m);
+  return m;
+}
+
+// Main house body
+makeWall(8, 4.5, 6, houseX, 2.25, houseZ, 0xc8b89a);
+
+// Roof (pyramid-ish from cone)
+const roofGeo = ps1Snap(new THREE.ConeGeometry(5.8, 3, 4, 1));
+const roofMat = new THREE.MeshPhongMaterial({ color: 0x7a3a1a, flatShading: true });
+const roof = new THREE.Mesh(roofGeo, roofMat);
+roof.position.set(houseX, 4.5 + 1.5, houseZ);
+roof.rotation.y = Math.PI / 4;
+scene.add(roof);
+
+// Door frame
+makeWall(1.3, 2.2, 0.15, houseX, 1.1, houseZ + 3.08, 0x5c3a1e);
+
+// Door (dark, slightly inset)
+const doorGeo = ps1Snap(new THREE.BoxGeometry(1.1, 2.0, 0.1, 1, 2, 1));
+const doorMat = new THREE.MeshPhongMaterial({ color: 0x1a0f00, flatShading: true });
+const door = new THREE.Mesh(doorGeo, doorMat);
+door.position.set(houseX, 1.0, houseZ + 3.1);
+scene.add(door);
+
+// Windows
+makeWall(1.2, 1.0, 0.15, houseX - 2.5, 2.5, houseZ + 3.08, 0x8ab4cc);
+makeWall(1.2, 1.0, 0.15, houseX + 2.5, 2.5, houseZ + 3.08, 0x8ab4cc);
+
+// Chimney
+makeWall(0.7, 2.2, 0.7, houseX + 2.5, 5.8, houseZ + 1, 0x9a8070);
+
+// --- POINTER LOCK ---
+const domEl = renderer.domElement;
+let yaw = Math.PI, pitch = 0; // face south (-z), toward path start
+let pointerLocked = false;
+domEl.addEventListener('click', () => {
+  domEl.requestPointerLock();
+  const bgm = document.getElementById('bgm');
+  bgm.volume = 0.2;
+  bgm.play();
+});
+document.addEventListener('pointerlockchange', () => {
+  pointerLocked = document.pointerLockElement === domEl;
+});
+document.addEventListener('mousemove', e => {
+  if (!pointerLocked) return;
+  yaw   -= e.movementX * 0.0025;
+  pitch -= e.movementY * 0.0025;
+  pitch = Math.max(-0.6, Math.min(0.6, pitch));
+});
+
+// --- KEYS ---
+const keys = {};
+document.addEventListener('keydown', e => keys[e.code] = true);
+document.addEventListener('keyup',   e => keys[e.code] = false);
+
+// --- DOOR TRIGGER ---
+const doorPos = new THREE.Vector3(houseX, 0, houseZ + 3.1);
+let triggered = false;
+
+const overlay = document.getElementById('overlay');
+const prompt  = document.getElementById('prompt');
+
+function showPrompt(text) {
+  prompt.textContent = text;
+  prompt.style.opacity = '1';
+}
+function hidePrompt() {
+  prompt.style.opacity = '0';
+}
+
+// --- COLLISION: keep player outside house walls ---
+function clampPlayer(pos) {
+  const hx = houseX, hz = houseZ;
+  const hw = 4.2, hd = 3.2;
+  if (pos.x > hx - hw && pos.x < hx + hw &&
+      pos.z > hz - hd && pos.z < hz + hd) {
+    const dx1 = (hx + hw) - pos.x;
+    const dx2 = pos.x - (hx - hw);
+    const dz1 = (hz + hd) - pos.z;
+    const dz2 = pos.z - (hz - hd);
+    const min = Math.min(dx1, dx2, dz1, dz2);
+    if (min === dx1) pos.x = hx + hw;
+    else if (min === dx2) pos.x = hx - hw;
+    else if (min === dz1) pos.z = hz + hd;
+    else pos.z = hz - hd;
+  }
+}
+
+// --- WOBBLE for PS1 vertex jitter effect on moving objects ---
+let t = 0;
+
+// --- GAME LOOP ---
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  t += dt;
+
+  if (!triggered) {
+    // Movement
+    const speed = 5.5;
+    const dir = new THREE.Vector3();
+    if (keys['KeyW'] || keys['ArrowUp'])    dir.z -= 1;
+    if (keys['KeyS'] || keys['ArrowDown'])  dir.z += 1;
+    if (keys['KeyA'] || keys['ArrowLeft'])  dir.x -= 1;
+    if (keys['KeyD'] || keys['ArrowRight']) dir.x += 1;
+
+    if (dir.length() > 0) {
+      dir.normalize();
+      dir.applyEuler(new THREE.Euler(0, yaw, 0));
+      camera.position.x += dir.x * speed * dt;
+      camera.position.z += dir.z * speed * dt;
+      // clamp to world
+      camera.position.x = Math.max(-210, Math.min(210, camera.position.x));
+      camera.position.z = Math.max(-210, Math.min(80, camera.position.z));
+      clampPlayer(camera.position);
+    }
+
+    camera.position.y = 1.7;
+    camera.rotation.order = 'YXZ';
+    camera.rotation.y = yaw;
+    camera.rotation.x = pitch;
+
+    // Door proximity
+    const distToDoor = camera.position.distanceTo(doorPos);
+    if (distToDoor < 3.5) {
+      showPrompt('[ ENTER ]');
+    } else {
+      hidePrompt();
+    }
+
+    if (distToDoor < 1.8) {
+      triggered = true;
+      hidePrompt();
+      overlay.classList.remove('fadein');
+      overlay.classList.add('fade');
+      setTimeout(() => { window.location.href = 'o.html'; }, 1800);
+    }
+  }
+
+  // Subtle PS1 vertex shimmer — re-jitter road geometry slightly
+  // (skip heavy per-frame geo changes for perf, fog + low-res is enough)
+
+  renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+animate();
+
+// Fade in from black after a short delay
+setTimeout(() => overlay.classList.add('fadein'), 500);
+</script>
+</body>
+</html>

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<title>Worst Website Ever</title>
+<style>
+body{
+font-family:"Comic Sans MS",cursive;
+margin:0;
+overflow-x:hidden;
+}
+
+#warning{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:black;
+color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+text-align:center;
+z-index:10000;
+font-family:Arial, sans-serif;
+padding:40px;
+}
+
+#warningbox{
+max-width:800px;
+}
+
+#site{
+display:none;
+animation:bgflash 0.25s infinite;
+}
+
+@keyframes bgflash{
+0%{background:red}
+20%{background:orange}
+40%{background:yellow}
+60%{background:lime}
+80%{background:cyan}
+100%{background:magenta}
+}
+
+h1{
+font-size:80px;
+text-align:center;
+color:white;
+text-shadow:0 0 20px black;
+animation:spin 5s linear infinite;
+}
+
+@keyframes spin{
+from{transform:rotate(0deg)}
+to{transform:rotate(360deg)}
+}
+
+.panel{
+position:absolute;
+background:linear-gradient(45deg,red,yellow,lime,cyan,magenta);
+padding:10px;
+border:5px dashed black;
+box-shadow:0 0 20px black;
+animation:wobble 2s infinite alternate;
+}
+
+@keyframes wobble{
+0%{transform:rotate(-5deg)}
+100%{transform:rotate(5deg)}
+}
+
+.marquee{
+position:absolute;
+white-space:nowrap;
+font-size:40px;
+color:black;
+animation:move 10s linear infinite;
+}
+
+@keyframes move{
+0%{left:-100%}
+100%{left:100%}
+}
+
+img{
+width:160px;
+animation:shake 0.5s infinite;
+}
+
+@keyframes shake{
+0%{transform:translate(0,0)}
+25%{transform:translate(6px,-6px)}
+50%{transform:translate(-6px,6px)}
+75%{transform:translate(6px,6px)}
+100%{transform:translate(-6px,-6px)}
+}
+
+button{
+font-family:"Comic Sans MS";
+font-size:22px;
+background:linear-gradient(45deg, red, yellow, lime, cyan, magenta);
+padding:10px;
+border:none;
+animation:spin 3s linear infinite;
+}
+
+input,select{
+font-family:"Comic Sans MS";
+font-size:18px;
+padding:5px;
+border:3px solid black;
+}
+
+#clock{
+font-size:30px;
+color:white;
+text-shadow:0 0 10px black;
+}
+
+.slider{
+width:200px;
+}
+
+</style>
+</head>
+<body>
+
+<div id="warning">
+<div id="warningbox">
+<h1 style="font-family:Arial">Epilepsy Warning</h1>
+<p>This website contains rapidly flashing colours, moving elements, animated graphics, and other intense visual effects that may trigger seizures in individuals with photosensitive epilepsy or other neurological conditions.</p>
+<p>Viewer discretion is strongly advised. If you are sensitive to flashing lights, high contrast patterns, or rapidly moving visuals, you should not proceed.</p>
+<p>By selecting continue, you acknowledge the nature of the visual content and choose to proceed at your own risk.</p>
+<br>
+<button onclick="startSite()" style="font-family:Arial;font-size:18px">Continue</button>
+</div>
+</div>
+
+<div id="site">
+
+<h1>WELCOME TO THE WORST WEBSITE</h1>
+
+<div class="marquee" style="top:120px">WARNING TOO MANY COLORS</div>
+<div class="marquee" style="top:170px;animation-duration:6s">THIS WEBSITE IS A VISUAL DISASTER</div>
+
+<div class="panel" style="top:260px;left:5%">
+<h3>Search The Chaos</h3>
+<input type="text" placeholder="search anything">
+<button onclick="alert('nothing found')">Search</button>
+</div>
+
+<div class="panel" style="top:260px;left:35%">
+<h3>Poll</h3>
+<p>Is this website awful?</p>
+<label><input type="radio" name="poll"> Yes</label><br>
+<label><input type="radio" name="poll"> Extremely</label><br>
+<label><input type="radio" name="poll"> My eyes hurt</label><br>
+<button onclick="alert('results: chaos')">Vote</button>
+</div>
+
+<div class="panel" style="top:260px;left:65%">
+<h3>Volume Slider</h3>
+<input type="range" class="slider">
+<p>Slide for absolutely no reason</p>
+</div>
+
+<div class="panel" style="top:470px;left:10%">
+<h3>Random Image Generator</h3>
+<button onclick="randomImage()">Generate</button>
+<br><br>
+<img id="randimg" src="https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg">
+</div>
+
+<div class="panel" style="top:470px;left:45%">
+<h3>Clock</h3>
+<div id="clock"></div>
+</div>
+
+<div class="panel" style="top:470px;left:70%">
+<h3>Dropdown Of Doom</h3>
+<select>
+<option>Option 1</option>
+<option>Bad Option</option>
+<option>Terrible Option</option>
+<option>Worst Option</option>
+</select>
+</div>
+
+<div class="panel" style="top:680px;left:20%">
+<h3>Chaos Button</h3>
+<button onclick="spawn()">Add Random Floating Text</button>
+</div>
+
+<div class="panel" style="top:680px;left:55%">
+<h3>Rickroll Video</h3>
+<iframe width="300" height="170" src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>
+</div>
+
+</div>
+
+<script>
+
+function startSite(){
+document.getElementById("warning").style.display="none"
+document.getElementById("site").style.display="block"
+startScripts()
+}
+
+function startScripts(){
+
+function updateClock(){
+const now=new Date()
+document.getElementById("clock").innerText=now.toLocaleTimeString()
+}
+setInterval(updateClock,1000)
+updateClock()
+
+function spawn(){
+const div=document.createElement("div")
+div.style.position="absolute"
+div.style.left=Math.random()*window.innerWidth+"px"
+div.style.top=Math.random()*window.innerHeight+"px"
+div.style.fontSize=(20+Math.random()*80)+"px"
+div.style.color="hsl("+Math.random()*360+",100%,50%)"
+div.style.fontFamily="Comic Sans MS"
+div.innerText="CHAOS"
+div.style.animation="spin 1s linear infinite"
+document.body.appendChild(div)
+}
+
+window.spawn=spawn
+
+function randomImage(){
+const imgs=[
+"https://upload.wikimedia.org/wikipedia/commons/3/3a/Cat03.jpg",
+"https://upload.wikimedia.org/wikipedia/commons/6/6e/Golde33443.jpg",
+"https://upload.wikimedia.org/wikipedia/commons/b/b6/Image_created_with_a_mobile_phone.png",
+"https://upload.wikimedia.org/wikipedia/commons/4/47/PNG_transparency_demonstration_1.png"
+]
+const pick=imgs[Math.floor(Math.random()*imgs.length)]
+document.getElementById("randimg").src=pick
+}
+
+window.randomImage=randomImage
+
+setInterval(spawn,900)
+
+setTimeout(()=>{
+const btn=document.createElement("button")
+btn.innerText="MORE"
+btn.style.position="fixed"
+btn.style.top="50%"
+btn.style.left="50%"
+btn.style.zIndex="9999"
+btn.style.fontSize="28px"
+btn.onclick=()=>{window.location.href="more.html"}
+document.body.appendChild(btn)
+
+setInterval(()=>{
+btn.style.left=Math.random()*window.innerWidth+"px"
+btn.style.top=Math.random()*window.innerHeight+"px"
+const jitterX=(Math.random()*20-10)
+const jitterY=(Math.random()*20-10)
+btn.style.transform="translate("+jitterX+"px,"+jitterY+"px) rotate("+(Math.random()*30-15)+"deg)"
+},700)
+
+},10000)
+
+}
+
+</script>
+
+</body>
+</html>

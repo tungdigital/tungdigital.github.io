@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<title>the mountain</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; }
+  canvas { display: block; }
+  #overlay {
+    position: fixed; inset: 0; background: #000; opacity: 1;
+    pointer-events: none; transition: opacity 3s ease; z-index: 100;
+  }
+  #overlay.fadein  { opacity: 0; }
+  #overlay.fadeout { opacity: 1; }
+  #dialogue {
+    position: fixed; top: 32px; left: 50%; transform: translateX(-50%);
+    color: #ddd8c8; font-family: 'Courier New', monospace; font-size: 13px;
+    letter-spacing: 3px; line-height: 2; text-align: center;
+    max-width: 580px; pointer-events: none; z-index: 60;
+    white-space: pre; opacity: 0; transition: opacity 1.4s ease;
+    text-shadow: 0 0 18px rgba(180,170,140,0.5);
+  }
+  #dialogue.visible { opacity: 1; }
+  #hud {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    color: #555; font-family: 'Courier New', monospace; font-size: 10px;
+    text-align: center; pointer-events: none; letter-spacing: 2px;
+    opacity: 0.5; line-height: 2;
+  }
+  #prompt {
+    position: fixed; bottom: 58px; left: 50%; transform: translateX(-50%);
+    color: #bbb; font-family: 'Courier New', monospace; font-size: 11px;
+    letter-spacing: 4px; opacity: 0; pointer-events: none; z-index: 60;
+    transition: opacity 0.4s; text-align: center;
+  }
+  #scanlines {
+    position: fixed; inset: 0; pointer-events: none; z-index: 50;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px,
+      rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+  }
+  #clickme {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: #666; font-family: 'Courier New', monospace; font-size: 12px;
+    letter-spacing: 4px; z-index: 110; cursor: pointer; transition: opacity 0.6s;
+  }
+  #clickme.hidden { opacity: 0; pointer-events: none; }
+
+  #passwordScreen {
+    position: fixed; inset: 0; background: #000;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 28px; z-index: 120; transition: opacity 0.8s ease;
+  }
+  #passwordScreen.hidden { opacity: 0; pointer-events: none; }
+  #passwordPrompt {
+    color: #555; font-family: 'Courier New', monospace; font-size: 11px;
+    letter-spacing: 4px; text-align: center;
+  }
+  #passwordInput {
+    background: none; border: none; border-bottom: 1px solid #333;
+    color: #888; font-family: 'Courier New', monospace; font-size: 13px;
+    letter-spacing: 6px; text-align: center; outline: none; width: 240px;
+    padding: 6px 0; caret-color: #666;
+  }
+  #passwordError {
+    color: #553333; font-family: 'Courier New', monospace; font-size: 10px;
+    letter-spacing: 3px; opacity: 0; transition: opacity 0.4s;
+  }
+  #passwordError.visible { opacity: 1; }
+</style>
+</head>
+<body>
+<audio id="bgm" src="audio/index10.mp3" loop></audio>
+<div id="overlay"></div>
+<div id="scanlines"></div>
+<div id="dialogue"></div>
+<div id="prompt"></div>
+<div id="hud">W/S — MOVE &nbsp;|&nbsp; SHIFT — RUN &nbsp;|&nbsp; MOUSE — LOOK &nbsp;|&nbsp; F — FLASHLIGHT &nbsp;|&nbsp; E — INTERACT</div>
+<div id="passwordScreen">
+  <div id="passwordPrompt">ENTER PASSWORD</div>
+  <input id="passwordInput" type="password" autocomplete="off" spellcheck="false" maxlength="32" />
+  <div id="passwordError">incorrect</div>
+</div>
+<div id="clickme">CLICK TO BEGIN</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+// NARRATIVE
+// ═══════════════════════════════════════════════════════
+const DIALOGUES = [
+  { progress: 0.04, text: "dear player," },
+  { progress: 0.10, text: "i realise that most\nof this doesn't make sense." },
+  { progress: 0.17, text: "there's about a million\nquestions going through your head." },
+  { progress: 0.25, text: "questions i don't have answers for." },
+  { progress: 0.33, text: "what does all the erewhon stuff mean?\nwho are the employees?" },
+  { progress: 0.41, text: "who made these games?" },
+  { progress: 0.49, text: "and why?" },
+  { progress: 0.57, text: "there is so much\nyou do not know." },
+  { progress: 0.64, text: "there is so much\ni cannot tell you." },
+  { progress: 0.71, text: "i need to ask you to\nnot speak to me anymore." },
+  { progress: 0.79, text: "there is something that you\nneed to find in yourself." },
+  { progress: 0.86, text: "and when you find what that something is," },
+  { progress: 0.93, text: "don't say anything." },
+];
+const FINAL_DIALOGUE = "thank you.";
+
+// ═══════════════════════════════════════════════════════
+// RENDERER
+// ═══════════════════════════════════════════════════════
+const renderer = new THREE.WebGLRenderer({ antialias: false });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 0.8));
+renderer.setClearColor(0x06041a);
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x0a0820, 0.011);
+
+const camera = new THREE.PerspectiveCamera(72, window.innerWidth / window.innerHeight, 0.1, 500);
+
+// ═══════════════════════════════════════════════════════
+// LIGHTING
+// ═══════════════════════════════════════════════════════
+// Richer ambient — cold indigo night
+scene.add(new THREE.AmbientLight(0x1a1640, 1.2));
+
+// Moonlight — icy blue-silver
+const moon = new THREE.DirectionalLight(0x7799dd, 0.7);
+moon.position.set(-80, 200, -60);
+scene.add(moon);
+
+// Subtle warm fill from below (reflected snow glow)
+const fillLight = new THREE.DirectionalLight(0x442255, 0.18);
+fillLight.position.set(30, -20, 60);
+scene.add(fillLight);
+
+// Flashlight (SpotLight attached to camera each frame)
+const flashlight = new THREE.SpotLight(0xffeedd, 3.2, 95, Math.PI * 0.13, 0.50, 1.5);
+scene.add(flashlight);
+const flashTarget = new THREE.Object3D();
+scene.add(flashTarget);
+flashlight.target = flashTarget;
+
+// ═══════════════════════════════════════════════════════
+// HEIGHTMAP
+// ═══════════════════════════════════════════════════════
+const GRID   = 200;
+const WORLD  = 240;
+const HALF   = WORLD / 2;
+const PEAK_H = 130;
+
+const heights = new Float32Array((GRID + 1) * (GRID + 1));
+
+function mountainH(nx, nz) {
+  const d = Math.sqrt(nx * nx + nz * nz);
+  const cone = Math.max(0, 1.0 - d * 1.08);
+  const shaped = Math.pow(cone, 1.55);
+  // Multi-octave noise
+  let n = 0;
+  n += Math.sin(nx * 7.1 + 1.9) * Math.cos(nz * 6.8 + 0.7) * 0.05;
+  n += Math.sin(nx * 14.2 - 0.8) * Math.cos(nz * 13.5 + 2.3) * 0.025;
+  n += Math.sin(nx * 29.0 + 1.4) * Math.cos(nz * 27.3 - 1.8) * 0.01;
+  n += Math.sin((nx + nz) * 5.3) * 0.02;
+  n += Math.sin(nx * 3.1 - nz * 4.7) * 0.015;
+  return (shaped + n * shaped * 2.8) * PEAK_H;
+}
+
+for (let iz = 0; iz <= GRID; iz++) {
+  for (let ix = 0; ix <= GRID; ix++) {
+    const nx = (ix / GRID) * 2 - 1;
+    const nz = (iz / GRID) * 2 - 1;
+    heights[ix + iz * (GRID + 1)] = mountainH(nx, nz);
+  }
+}
+
+function getH(wx, wz) {
+  const gx = (wx + HALF) / WORLD * GRID;
+  const gz = (wz + HALF) / WORLD * GRID;
+  const ix = Math.floor(gx), iz = Math.floor(gz);
+  if (ix < 0 || ix >= GRID || iz < 0 || iz >= GRID) return 0;
+  const fx = gx - ix, fz = gz - iz;
+  const h00 = heights[ ix    +  iz    * (GRID+1)];
+  const h10 = heights[(ix+1) +  iz    * (GRID+1)];
+  const h01 = heights[ ix    + (iz+1) * (GRID+1)];
+  const h11 = heights[(ix+1) + (iz+1) * (GRID+1)];
+  return h00*(1-fx)*(1-fz) + h10*fx*(1-fz) + h01*(1-fx)*fz + h11*fx*fz;
+}
+
+// ═══════════════════════════════════════════════════════
+// TERRAIN MESH
+// ═══════════════════════════════════════════════════════
+function buildTerrain() {
+  const verts = [], colors = [], indices = [];
+  for (let iz = 0; iz <= GRID; iz++) {
+    for (let ix = 0; ix <= GRID; ix++) {
+      const wx = (ix / GRID) * WORLD - HALF;
+      const wz = (iz / GRID) * WORLD - HALF;
+      const wy = heights[ix + iz * (GRID + 1)];
+      verts.push(wx, wy, wz);
+      const t = wy / PEAK_H;
+      if      (t > 0.88) colors.push(0.82, 0.90, 1.00);  // bright snow-white blue
+      else if (t > 0.72) colors.push(0.38, 0.32, 0.52);  // lavender upper rock
+      else if (t > 0.52) colors.push(0.22, 0.18, 0.38);  // deep violet mid
+      else if (t > 0.30) colors.push(0.16, 0.28, 0.30);  // dark teal-green
+      else if (t > 0.12) colors.push(0.18, 0.12, 0.26);  // muted purple base
+      else               colors.push(0.10, 0.08, 0.18);  // near-black ground
+    }
+  }
+  for (let iz = 0; iz < GRID; iz++) {
+    for (let ix = 0; ix < GRID; ix++) {
+      const a = ix + iz*(GRID+1), b=(ix+1)+iz*(GRID+1), c=ix+(iz+1)*(GRID+1), d=(ix+1)+(iz+1)*(GRID+1);
+      indices.push(a,c,b, b,c,d);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  geo.setAttribute('color',    new THREE.Float32BufferAttribute(colors, 3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  scene.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })));
+}
+buildTerrain();
+
+// ═══════════════════════════════════════════════════════
+// PATH SPINE — spiral up the mountainside
+// ═══════════════════════════════════════════════════════
+const PATH_STEPS = 1000;
+const PATH_POINTS = [];
+
+for (let i = 0; i <= PATH_STEPS; i++) {
+  const t = i / PATH_STEPS;
+  const angle  = t * Math.PI * 14 - Math.PI * 0.5;
+  const radius = (HALF * 0.70) * Math.pow(1 - t, 0.52) + 2.0;
+  const wx = Math.cos(angle) * radius;
+  const wz = Math.sin(angle) * radius;
+  const wy = getH(wx, wz);
+  PATH_POINTS.push(new THREE.Vector3(wx, wy, wz));
+}
+
+// ═══════════════════════════════════════════════════════
+// CARVED LEDGE PATH
+// ═══════════════════════════════════════════════════════
+function buildCarvedPath() {
+  const PWIDTH = 3.8, LIFT = 0.22;
+  const verts=[], colors=[], idx=[];
+
+  for (let i = 0; i < PATH_POINTS.length - 1; i++) {
+    const p0 = PATH_POINTS[i], p1 = PATH_POINTS[i+1];
+    const dir = new THREE.Vector3().subVectors(p1,p0).normalize();
+    const side = new THREE.Vector3(-dir.z, 0, dir.x).normalize().multiplyScalar(PWIDTH*0.5);
+    const y0 = p0.y+LIFT, y1 = p1.y+LIFT;
+    const base = verts.length/3;
+
+    verts.push(
+      p0.x-side.x, y0, p0.z-side.z,
+      p0.x+side.x, y0, p0.z+side.z,
+      p1.x-side.x, y1, p1.z-side.z,
+      p1.x+side.x, y1, p1.z+side.z
+    );
+    // Warm sandstone path — terracotta at base, cool slate near summit
+    const s = 0.30 + (i/PATH_STEPS)*0.15;
+    const warm = 1.0 - (i/PATH_STEPS)*0.4;
+    for (let k=0;k<4;k++) colors.push(s*warm, s*0.78, s*(1.1 - warm*0.3));
+    idx.push(base,base+1,base+2, base+1,base+3,base+2);
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+  geo.setAttribute('color',    new THREE.Float32BufferAttribute(colors, 3));
+  geo.setIndex(idx);
+  geo.computeVertexNormals();
+  scene.add(new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true, flatShading: true })));
+
+  // Low curb walls on each edge
+  buildCurb( 1);
+  buildCurb(-1);
+}
+
+function buildCurb(side) {
+  const PWIDTH=3.8, LIFT=0.22, CW=0.3, CH=0.42;
+  const verts=[], idx=[];
+  for (let i=0; i<PATH_POINTS.length-1; i++) {
+    const p0=PATH_POINTS[i], p1=PATH_POINTS[i+1];
+    const dir=new THREE.Vector3().subVectors(p1,p0).normalize();
+    const sv=new THREE.Vector3(-dir.z,0,dir.x).normalize();
+    const off=sv.clone().multiplyScalar(side*(PWIDTH*0.5+CW*0.5));
+    const y0=p0.y+LIFT, y1=p1.y+LIFT;
+    const b=verts.length/3;
+    verts.push(
+      p0.x+off.x-sv.x*CW*.5, y0,    p0.z+off.z-sv.z*CW*.5,
+      p0.x+off.x+sv.x*CW*.5, y0,    p0.z+off.z+sv.z*CW*.5,
+      p0.x+off.x-sv.x*CW*.5, y0+CH, p0.z+off.z-sv.z*CW*.5,
+      p0.x+off.x+sv.x*CW*.5, y0+CH, p0.z+off.z+sv.z*CW*.5,
+      p1.x+off.x-sv.x*CW*.5, y1,    p1.z+off.z-sv.z*CW*.5,
+      p1.x+off.x+sv.x*CW*.5, y1,    p1.z+off.z+sv.z*CW*.5,
+      p1.x+off.x-sv.x*CW*.5, y1+CH, p1.z+off.z-sv.z*CW*.5,
+      p1.x+off.x+sv.x*CW*.5, y1+CH, p1.z+off.z+sv.z*CW*.5
+    );
+    idx.push(b+2,b+3,b+6, b+3,b+7,b+6);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+  geo.setIndex(idx); geo.computeVertexNormals();
+  scene.add(new THREE.Mesh(geo,new THREE.MeshLambertMaterial({color:0x2a3420,flatShading:true})));
+}
+
+buildCarvedPath();
+
+// ═══════════════════════════════════════════════════════
+// STARS
+// ═══════════════════════════════════════════════════════
+(function(){
+  const v=[];
+  for(let i=0;i<2200;i++){
+    const th=Math.random()*Math.PI*2, ph=Math.acos(2*Math.random()-1), r=440;
+    v.push(r*Math.sin(ph)*Math.cos(th), r*Math.cos(ph)*0.5+130, r*Math.sin(ph)*Math.sin(th));
+  }
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));
+  scene.add(new THREE.Points(g,new THREE.PointsMaterial({color:0xbbccee,size:1.6,sizeAttenuation:true})));
+})();
+
+// ═══════════════════════════════════════════════════════
+// DISTANT RIDGES
+// ═══════════════════════════════════════════════════════
+(function(){
+  [[-210,0,-270,75,150,5],[190,0,-230,55,115,6],[-155,0,-320,85,165,5],[240,0,-210,42,95,7],[15,0,-340,65,125,6]].forEach(([x,y,z,r,h,s])=>{
+    const g=new THREE.ConeGeometry(r,h,s,2);
+    const p=g.attributes.position;
+    for(let i=0;i<p.count;i++){p.setX(i,p.getX(i)+(Math.random()-.5)*18);p.setZ(i,p.getZ(i)+(Math.random()-.5)*18);}
+    g.computeVertexNormals();
+    const m=new THREE.Mesh(g,new THREE.MeshLambertMaterial({color:0x0d0b22,flatShading:true}));
+    m.position.set(x,y+h/2-10,z); scene.add(m);
+  });
+})();
+
+// ═══════════════════════════════════════════════════════
+// SUMMIT PLATFORM + STATUE
+// ═══════════════════════════════════════════════════════
+let statueGroup=null, finalBtn=null;
+(function(){
+  const group=new THREE.Group();
+  // Place platform so the path end-point arrives at its near edge
+  const pathEnd=PATH_POINTS[PATH_POINTS.length-1].clone();
+  // Offset the group center so the path walks onto the platform from the south side
+  const platformCenter = pathEnd.clone();
+  platformCenter.y -= 0.6; // sink it so player walks level onto the top face
+
+  // ── Flat circular platform ──
+  const platGeo = new THREE.CylinderGeometry(10, 12, 1.4, 10, 1);
+  const pp = platGeo.attributes.position;
+  for(let i=0;i<pp.count;i++){
+    const px=pp.getX(i), pz=pp.getZ(i);
+    if(Math.sqrt(px*px+pz*pz)>1){ pp.setX(i,px+(Math.random()-.5)*0.6); pp.setZ(i,pz+(Math.random()-.5)*0.6); }
+  }
+  platGeo.computeVertexNormals();
+  group.add(new THREE.Mesh(platGeo, new THREE.MeshLambertMaterial({color:0x2a3a3e,flatShading:true})));
+
+  // Decorative inner ring — slightly raised
+  const ringGeo = new THREE.CylinderGeometry(6.5,7,0.3,10,1);
+  const ring = new THREE.Mesh(ringGeo, new THREE.MeshLambertMaterial({color:0x223030,flatShading:true}));
+  ring.position.y = 0.8;
+  group.add(ring);
+
+  // ── Statue lives at the BACK of the platform (opposite side from where path arrives) ──
+  // "back" = +z direction in group-local space; we'll rotate the group to match path approach direction
+  const statueOffset = new THREE.Vector3(0, 1.0, -6); // pushed back from center
+
+  // Plinth block
+  const plinth = new THREE.Mesh(new THREE.BoxGeometry(3.5,1.0,3.5),
+    new THREE.MeshLambertMaterial({color:0x1a3a4a,flatShading:true}));
+  plinth.position.copy(statueOffset);
+  group.add(plinth);
+
+  // Torso
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(2.2,1.8,1.0),
+    new THREE.MeshLambertMaterial({color:0x2e1f4a,flatShading:true}));
+  torso.position.set(statueOffset.x, statueOffset.y+2.3, statueOffset.z);
+  group.add(torso);
+
+  // Legs
+  [-0.6,0.6].forEach(ox=>{
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.8,1.5,0.9),
+      new THREE.MeshLambertMaterial({color:0x261840,flatShading:true}));
+    leg.position.set(statueOffset.x+ox, statueOffset.y+1.25, statueOffset.z);
+    group.add(leg);
+  });
+
+  // Head
+  const head = new THREE.Mesh(new THREE.OctahedronGeometry(0.95,0),
+    new THREE.MeshLambertMaterial({color:0x4a2060,flatShading:true}));
+  head.scale.set(1.1,0.85,0.9);
+  head.position.set(statueOffset.x, statueOffset.y+3.6, statueOffset.z);
+  group.add(head);
+
+  // Arms outstretched
+  [-1,1].forEach(s=>{
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(1.6,0.6,0.7),
+      new THREE.MeshLambertMaterial({color:0x2e1f4a,flatShading:true}));
+    arm.position.set(statueOffset.x+s*2.0, statueOffset.y+2.4, statueOffset.z);
+    arm.rotation.z = s*0.15;
+    group.add(arm);
+  });
+
+  // ── Button on the FRONT face of the plinth (facing the player as they arrive) ──
+  const btnMat=new THREE.MeshLambertMaterial({color:0xffcc55,emissive:0xff8800,emissiveIntensity:1.4});
+  finalBtn=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,0.4,8),btnMat);
+  // Sits on top of plinth, slightly toward the player side
+  finalBtn.position.set(statueOffset.x, statueOffset.y+0.8, statueOffset.z+2.0);
+  finalBtn.rotation.x = -Math.PI*0.5;
+  group.add(finalBtn);
+
+  // Warm glow
+  const glow=new THREE.PointLight(0xff9933,2.4,28);
+  glow.position.set(statueOffset.x, statueOffset.y+1.6, statueOffset.z+2.0);
+  group.add(glow);
+
+  // Orient group so the statue faces the direction the path arrives from
+  // The path spirals in — find the approach direction from the last few path points
+  const pA = PATH_POINTS[PATH_STEPS - 20];
+  const pB = PATH_POINTS[PATH_STEPS];
+  const approachDir = new THREE.Vector2(pB.x - pA.x, pB.z - pA.z).normalize();
+  // Rotate group so +z of group faces opposite the approach (statue at back, player enters front)
+  const groupYaw = Math.atan2(approachDir.x, approachDir.y);
+  group.rotation.y = groupYaw;
+
+  group.position.copy(platformCenter);
+  scene.add(group);
+  statueGroup=group;
+})();
+
+// ═══════════════════════════════════════════════════════
+// PLAYER STATE
+// ═══════════════════════════════════════════════════════
+let pathIndex=0, yaw=0, pitch=0.08;
+const keys={};
+let gameEnded=false, eJustPressed=false;
+const dialogueSeen=new Set();
+let dialogueActive=false, dialogueFadeTimer=0;
+
+// Start position
+const sp=PATH_POINTS[0];
+camera.position.set(sp.x, sp.y+1.7, sp.z);
+// Face up path
+const sp5=PATH_POINTS[5];
+yaw=-Math.atan2(sp5.x-sp.x, sp5.z-sp.z);
+
+// ═══════════════════════════════════════════════════════
+// INPUT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('keydown', e=>{ keys[e.code]=true; if(e.code==='KeyE') eJustPressed=true; });
+document.addEventListener('keyup',   e=>{ keys[e.code]=false; });
+
+let pointerLocked=false;
+let flashlightOn=true;
+document.addEventListener('pointerlockchange',()=>{ pointerLocked=document.pointerLockElement===renderer.domElement; });
+document.addEventListener('mousemove', e=>{
+  if(!pointerLocked) return;
+  yaw  -=e.movementX*0.002;
+  pitch-=e.movementY*0.002;
+  pitch=Math.max(-1.2,Math.min(1.2,pitch));
+});
+document.addEventListener('keydown', e=>{
+  if(e.code==='KeyF'){ flashlightOn=!flashlightOn; flashlight.intensity = flashlightOn ? 2.8 : 0; }
+});
+
+// ═══════════════════════════════════════════════════════
+// DIALOGUE
+// ═══════════════════════════════════════════════════════
+const dialogueEl=document.getElementById('dialogue');
+function showDialogue(text){
+  dialogueEl.textContent=text;
+  dialogueEl.classList.add('visible');
+  dialogueActive=true; dialogueFadeTimer=6.5;
+}
+function updateDialogue(dt){
+  if(!dialogueActive) return;
+  dialogueFadeTimer-=dt;
+  if(dialogueFadeTimer<=0){ dialogueEl.classList.remove('visible'); dialogueActive=false; }
+}
+const promptEl=document.getElementById('prompt');
+function showPrompt(t){ promptEl.textContent=t; promptEl.style.opacity='1'; }
+function hidePrompt(){ promptEl.style.opacity='0'; }
+
+// ═══════════════════════════════════════════════════════
+// PASSWORD GATE
+// ═══════════════════════════════════════════════════════
+const PASSWORD = 'tungnguyen';
+const pwScreen  = document.getElementById('passwordScreen');
+const pwInput   = document.getElementById('passwordInput');
+const pwError   = document.getElementById('passwordError');
+
+pwInput.focus();
+pwInput.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  if (pwInput.value.toLowerCase().trim() === PASSWORD) {
+    pwScreen.classList.add('hidden');
+    setTimeout(() => { pwScreen.style.display = 'none'; }, 900);
+  } else {
+    pwInput.value = '';
+    pwError.classList.add('visible');
+    setTimeout(() => pwError.classList.remove('visible'), 1800);
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// START
+// ═══════════════════════════════════════════════════════
+const bgm=document.getElementById('bgm');
+bgm.volume=0.5;
+let started=false;
+
+function startGame(){
+  if(started) return;
+  started=true;
+  document.getElementById('clickme').classList.add('hidden');
+  renderer.domElement.requestPointerLock();
+  bgm.play().catch(()=>{});
+  setTimeout(()=>document.getElementById('overlay').classList.add('fadein'),300);
+}
+document.getElementById('clickme').addEventListener('click', startGame);
+
+// Re-acquire pointer lock if the player clicks the canvas after losing focus
+renderer.domElement.addEventListener('click', () => {
+  if (started && !pointerLocked) renderer.domElement.requestPointerLock();
+});
+
+// ═══════════════════════════════════════════════════════
+// MAIN LOOP
+// ═══════════════════════════════════════════════════════
+const clock=new THREE.Clock();
+const _tv=new THREE.Vector3();
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=Math.min(clock.getDelta(),0.05);
+  const t=clock.getElapsedTime();
+
+  // Always update flashlight position/target so it's ready when toggled
+  flashlight.position.copy(camera.position);
+  camera.getWorldDirection(_tv);
+  flashTarget.position.copy(camera.position).addScaledVector(_tv, 12);
+  if(flashlightOn) flashlight.intensity = 2.8 + Math.sin(t*51.3)*0.09 + Math.sin(t*109.7)*0.04;
+
+  if(gameEnded){ renderer.render(scene,camera); return; }
+
+  // ── MOVEMENT ──
+  // Very slow walk — shift gives a modest jog boost
+  const WALK   = 0.022;
+  const SPRINT = 0.072;
+  const holding = keys['ShiftLeft'] || keys['ShiftRight'];
+  const SPEED = holding ? SPRINT : WALK;
+
+  if(keys['KeyW']||keys['ArrowUp'])   pathIndex=Math.min(PATH_STEPS, pathIndex+SPEED*60*dt);
+  if(keys['KeyS']||keys['ArrowDown']) pathIndex=Math.max(0,          pathIndex-SPEED*60*dt*0.6);
+
+  // ── POSITION ON PATH ──
+  const pi=Math.min(Math.floor(pathIndex), PATH_STEPS-1);
+  const pf=pathIndex-pi;
+  const ptA=PATH_POINTS[pi];
+  const ptB=PATH_POINTS[Math.min(pi+1,PATH_STEPS)];
+  const pathPos=ptA.clone().lerp(ptB,pf);
+  // Live terrain sample keeps feet glued to ground
+  pathPos.y = getH(pathPos.x, pathPos.z) + 1.72 + Math.sin(t*1.85+pathIndex*0.28)*0.04;
+  camera.position.lerp(pathPos, 0.20);
+
+  // Camera rotation is purely mouse/keyboard — no auto-steering
+  const qY=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),yaw);
+  const qP=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),pitch);
+  camera.quaternion.copy(qY).multiply(qP);
+
+  // ── DIALOGUES ──
+  const progress=pathIndex/PATH_STEPS;
+  DIALOGUES.forEach((d,i)=>{
+    if(!dialogueSeen.has(i) && progress>=d.progress){ dialogueSeen.add(i); showDialogue(d.text); }
+  });
+  updateDialogue(dt);
+
+  // ── SUMMIT ──
+  if(finalBtn){
+    const bw=finalBtn.getWorldPosition(_tv);
+    if(camera.position.distanceTo(bw)<7){
+      showPrompt('[ E — PRESS ]');
+      if(eJustPressed){
+        gameEnded=true;
+        bgm.pause();
+        showDialogue(FINAL_DIALOGUE);
+        hidePrompt();
+        setTimeout(()=>{
+          const ol=document.getElementById('overlay');
+          ol.style.background='#fff';
+          ol.style.transition='opacity 2.5s ease';
+          ol.classList.remove('fadein'); ol.classList.add('fadeout');
+          setTimeout(()=>{ window.location.href='island.html'; },5000);
+        },3000);
+      }
+    } else { hidePrompt(); }
+  }
+
+  if(statueGroup) statueGroup.rotation.y=Math.sin(t*0.18)*0.1;
+  if(finalBtn)    finalBtn.material.emissiveIntensity=0.9+0.6*Math.abs(Math.sin(t*2.2));
+
+  eJustPressed=false;
+  renderer.render(scene,camera);
+}
+
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+animate();
+</script>
+</body>
+</html>

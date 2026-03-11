@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bludgeoned</title>
+</head>
+<style>
+    body {
+        background-image: url("images/sol.jpg");
+        background-size: 300px 300px;
+        font-family: Comic Sans MS, cursive, sans-serif;
+        animation: moveBackground 120s linear infinite;
+        margin: 0;
+        overflow: hidden;
+        width: 100vw;
+        height: 100vh;
+    }
+
+    h1, h2, p {
+        color: white;
+    }
+
+    @keyframes moveBackground {
+        from { background-position: 0 0; }
+        to { background-position: 0 -1000%; }
+    }
+
+    #stroker {
+        position: fixed;
+        width: 240px;
+        height: 240px;
+        cursor: pointer;
+        transition: transform 0.1s ease;
+        filter: drop-shadow(0 0 8px rgba(255,255,255,0.6));
+        z-index: 10;
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+
+    #stroker:active {
+        transform: scale(0.85) rotate(15deg) !important;
+    }
+
+    /* HUD */
+    #hud {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: none;
+        justify-content: center;
+        align-items: center;
+        padding: 12px 0 16px;
+        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 70%, transparent 100%);
+        z-index: 100;
+        gap: 18px;
+    }
+
+    #hud.visible {
+        display: flex;
+    }
+
+    #hud-label {
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        font-weight: bold;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: #aaffaa;
+        text-shadow: 0 0 8px #00ff44;
+    }
+
+    #hud-bar-wrap {
+        width: 220px;
+        height: 18px;
+        background: rgba(0,0,0,0.7);
+        border: 2px solid #00ff44;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 0 10px #00ff4466, inset 0 0 6px rgba(0,0,0,0.5);
+    }
+
+    #hud-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #00cc33, #aaff00);
+        transition: width 0.2s ease;
+        box-shadow: inset 0 0 6px rgba(255,255,255,0.3);
+    }
+
+    #hud-count {
+        font-family: 'Courier New', monospace;
+        font-size: 22px;
+        font-weight: bold;
+        color: #ffffff;
+        text-shadow: 0 0 10px #00ff44, 0 0 20px #00ff44;
+        min-width: 60px;
+        text-align: left;
+        letter-spacing: 1px;
+    }
+
+    #hud-goal {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        color: #88ff88;
+        letter-spacing: 2px;
+    }
+
+    /* Floating +1 pop */
+    .pop {
+        position: fixed;
+        font-family: 'Courier New', monospace;
+        font-size: 22px;
+        font-weight: bold;
+        color: #ffff00;
+        text-shadow: 0 0 8px #ff8800, 1px 1px 0 #aa4400;
+        pointer-events: none;
+        z-index: 200;
+        animation: popFloat 0.7s ease-out forwards;
+    }
+
+    @keyframes popFloat {
+        0%   { opacity: 1; transform: translateY(0) scale(1.2); }
+        100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
+    }
+
+    /* Win flash */
+    #win-flash {
+        position: fixed;
+        inset: 0;
+        background: white;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 999;
+        transition: opacity 0.1s;
+    }
+</style>
+<body>
+
+    <img id="stroker" src="images/stroker.jpg" alt="stroker" draggable="false">
+
+    <div id="hud">
+        <span id="hud-label">Clicks</span>
+        <div id="hud-bar-wrap">
+            <div id="hud-bar"></div>
+        </div>
+        <span id="hud-count">0<span id="hud-goal">/50</span></span>
+    </div>
+
+    <div id="win-flash"></div>
+
+<script>
+    const img = document.getElementById('stroker');
+    const hud = document.getElementById('hud');
+    const hudBar = document.getElementById('hud-bar');
+    const hudCount = document.getElementById('hud-count');
+    const hudGoal = document.getElementById('hud-goal');
+    const winFlash = document.getElementById('win-flash');
+
+    const GOAL = 50;
+    let clicks = 0;
+    let moveInterval = null;
+    let targetX = 100, targetY = 100;
+    let currentX = 100, currentY = 100;
+    let vx = 0, vy = 0;
+
+    // ---- Sound synthesis (no external files) ----
+    let audioCtx = null;
+
+    function getAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        return audioCtx;
+    }
+
+    function playClickSound() {
+        try {
+            const ctx = getAudio();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+
+            // Retro "bloop" sound
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(880, ctx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.12);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.15);
+        } catch(e) {}
+    }
+
+    function playWinSound() {
+        try {
+            const ctx = getAudio();
+            const notes = [523, 659, 784, 1047];
+            notes.forEach((freq, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'square';
+                const t = ctx.currentTime + i * 0.12;
+                osc.frequency.setValueAtTime(freq, t);
+                gain.gain.setValueAtTime(0.3, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+                osc.start(t);
+                osc.stop(t + 0.18);
+            });
+        } catch(e) {}
+    }
+
+    // ---- Random movement ----
+    function getNewTarget() {
+        const margin = 80;
+        const w = window.innerWidth  - margin * 2;
+        const h = window.innerHeight - margin * 2 - 80; // avoid HUD
+        return {
+            x: margin + Math.random() * w,
+            y: margin + Math.random() * h
+        };
+    }
+
+    function pickNewTarget() {
+        const t = getNewTarget();
+        targetX = t.x;
+        targetY = t.y;
+    }
+
+    // Smooth lerp-based movement with occasional new targets
+    pickNewTarget();
+    currentX = targetX;
+    currentY = targetY;
+
+    setInterval(pickNewTarget, 1200 + Math.random() * 1200);
+
+    function animate() {
+        const speed = 0.045;
+        currentX += (targetX - currentX) * speed + (Math.random() - 0.5) * 1.5;
+        currentY += (targetY - currentY) * speed + (Math.random() - 0.5) * 1.5;
+
+        // Clamp
+        currentX = Math.max(20, Math.min(window.innerWidth  - 140, currentX));
+        currentY = Math.max(20, Math.min(window.innerHeight - 160, currentY));
+
+        img.style.left = currentX + 'px';
+        img.style.top  = currentY  + 'px';
+
+        requestAnimationFrame(animate);
+    }
+    animate();
+
+    // Re-pick target randomly more often for erratic feel
+    setInterval(pickNewTarget, 600 + Math.random() * 800);
+
+    // ---- Click handler ----
+    img.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (clicks >= GOAL) return;
+
+        clicks++;
+        playClickSound();
+
+        // Show HUD on first click
+        if (clicks === 1) hud.classList.add('visible');
+
+        // Update HUD
+        const pct = (clicks / GOAL) * 100;
+        hudBar.style.width = pct + '%';
+        hudCount.innerHTML = `${clicks}<span id="hud-goal" style="font-size:12px;color:#88ff88;letter-spacing:2px">/50</span>`;
+
+        // Spawn +1 pop at click position
+        const pop = document.createElement('div');
+        pop.className = 'pop';
+        pop.textContent = '+1';
+        pop.style.left = (e.clientX - 12) + 'px';
+        pop.style.top  = (e.clientY - 20) + 'px';
+        document.body.appendChild(pop);
+        setTimeout(() => pop.remove(), 750);
+
+        // Jiggle image
+        img.style.transform = `scale(0.85) rotate(${(Math.random()-0.5)*30}deg)`;
+        setTimeout(() => img.style.transform = '', 120);
+
+        // Immediately jump to new position after click
+        pickNewTarget();
+        currentX = targetX;
+        currentY = targetY;
+
+        // Win condition
+        if (clicks >= GOAL) {
+            playWinSound();
+            winFlash.style.opacity = '1';
+            setTimeout(() => {
+                window.location.href = 'bana.html';
+            }, 600);
+        }
+    });
+</script>
+</body>
+</html>

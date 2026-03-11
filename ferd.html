@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<title>yall ready fo dis</title>
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:white;
+}
+
+#img{
+    position:absolute;
+    top:50%;
+    left:-300px;
+    transform:translateY(-50%);
+    opacity:0;
+    transition: opacity 1s linear, transform 20s linear;
+}
+</style>
+</head>
+
+<body>
+<audio id="bgAudio" src="audio/yall.mp3" loop autoplay></audio>
+<img id="img" src="images/trapped.jpg">
+
+<script>
+const img = document.getElementById("img");
+
+setTimeout(() => {
+    img.style.opacity = "1";
+
+    // Calculate exact distance needed: full viewport + image width + starting offset
+    const totalDistance = window.innerWidth + img.offsetWidth + 300;
+    img.style.transform = `translateY(-50%) translateX(${totalDistance}px)`;
+
+}, 3000);
+
+setTimeout(() => {
+    window.location.href = "HAHAHAHA.html";
+}, 26000);
+</script>
+
+</body>
+</html>

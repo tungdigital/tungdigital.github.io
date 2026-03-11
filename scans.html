@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title></title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Cinzel:wght@300;400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #0a0a0a;
+      --ash: #1a1a1a;
+      --smoke: #2a2a2a;
+      --bone: #c8bfb0;
+      --pale: #e8e0d4;
+      --dim: rgba(200, 191, 176, 0.08);
+      --glow: rgba(200, 191, 176, 0.04);
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--ink);
+      overflow: hidden;
+      cursor: crosshair;
+    }
+
+    /* Subtle grain overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 100;
+      opacity: 0.6;
+    }
+
+    /* Vignette */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.85) 100%);
+      pointer-events: none;
+      z-index: 99;
+    }
+
+    /* ── IMAGE ── */
+    #scene {
+      position: fixed; inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      z-index: 10;
+    }
+
+    #scene.shifted {
+      transform: translateY(-90px);
+    }
+
+    #main-image {
+      max-width: 480px;
+      max-height: 480px;
+      width: auto;
+      height: auto;
+      opacity: 0;
+      animation: imageReveal 3s ease forwards 0.5s;
+      filter: brightness(0.88) contrast(1.05);
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    @keyframes imageReveal {
+      0%   { opacity: 0; filter: brightness(0) contrast(1); }
+      60%  { opacity: 0.7; filter: brightness(0.7) contrast(1.08); }
+      100% { opacity: 1; filter: brightness(0.88) contrast(1.05); }
+    }
+
+    /* ── PROMPT ── */
+    #prompt-wrap {
+      position: fixed;
+      left: 50%;
+      bottom: calc(50% - 310px);
+      transform: translateX(-50%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 20;
+      transition: opacity 1.4s ease;
+      text-align: center;
+      width: 480px;
+    }
+
+    #prompt-wrap.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #prompt-label {
+      font-family: 'Cinzel', serif;
+      font-weight: 300;
+      font-size: 13px;
+      letter-spacing: 0.35em;
+      color: var(--bone);
+      text-transform: uppercase;
+      margin-bottom: 18px;
+      opacity: 0.75;
+    }
+
+    #prompt-box {
+      position: relative;
+      display: flex;
+      align-items: stretch;
+      border: 1px solid rgba(200, 191, 176, 0.18);
+      background: rgba(10, 10, 10, 0.92);
+      backdrop-filter: blur(12px);
+    }
+
+    #prompt-box::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border: 1px solid rgba(200, 191, 176, 0.06);
+      pointer-events: none;
+    }
+
+    #answer-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      padding: 16px 20px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      font-style: italic;
+      font-weight: 300;
+      color: var(--pale);
+      letter-spacing: 0.12em;
+      caret-color: var(--bone);
+    }
+
+    #answer-input::placeholder {
+      color: rgba(200, 191, 176, 0.25);
+      font-style: italic;
+    }
+
+    #submit-btn {
+      background: transparent;
+      border: none;
+      border-left: 1px solid rgba(200, 191, 176, 0.12);
+      padding: 0 20px;
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      color: rgba(200, 191, 176, 0.45);
+      text-transform: uppercase;
+      transition: color 0.3s ease, background 0.3s ease;
+    }
+
+    #submit-btn:hover {
+      color: var(--bone);
+      background: rgba(200, 191, 176, 0.04);
+    }
+
+    #error-msg {
+      margin-top: 10px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: rgba(180, 120, 100, 0.7);
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      font-style: italic;
+    }
+
+    #error-msg.show { opacity: 1; }
+
+    /* ── CUT BUTTON ── */
+    #cut-btn {
+      position: fixed;
+      bottom: 36px;
+      left: 40px;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 30;
+      transition: opacity 1.6s ease;
+      background: transparent;
+      border: 1px solid rgba(200, 191, 176, 0.14);
+      padding: 11px 24px;
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 0.4em;
+      color: rgba(200, 191, 176, 0.4);
+      text-transform: uppercase;
+      backdrop-filter: blur(6px);
+      transition: opacity 1.6s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    #cut-btn.visible {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #cut-btn:hover {
+      color: var(--bone);
+      border-color: rgba(200, 191, 176, 0.3);
+      background: rgba(200, 191, 176, 0.03);
+    }
+
+    /* ── AUDIO NOTE ── */
+    #audio-prompt {
+      position: fixed;
+      top: 28px;
+      right: 32px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 10px;
+      letter-spacing: 0.3em;
+      color: rgba(200, 191, 176, 0.2);
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeNote 2s ease forwards 2s;
+      z-index: 50;
+      cursor: pointer;
+      transition: color 0.3s;
+    }
+
+    #audio-prompt:hover { color: rgba(200, 191, 176, 0.45); }
+
+    @keyframes fadeNote {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background audio -->
+  <audio id="bg-audio" loop preload="auto">
+    <source src="audio/gy.mp3" type="audio/mpeg"/>
+  </audio>
+
+  <!-- Audio nudge -->
+  <div id="audio-prompt" onclick="startAudio()">&#9654; sound</div>
+
+  <!-- Central image -->
+  <div id="scene">
+    <img id="main-image" src="images/Pan.png" alt="" draggable="false"/>
+  </div>
+
+  <!-- Answer prompt -->
+  <div id="prompt-wrap">
+    <div id="prompt-label">Succour Track 5?</div>
+    <div id="prompt-box">
+      <input id="answer-input" type="text" placeholder="—" autocomplete="off" spellcheck="false"/>
+      <button id="submit-btn" onclick="checkAnswer()">Enter</button>
+    </div>
+    <div id="error-msg">incorrect</div>
+  </div>
+
+  <!-- Cut button -->
+  <button id="cut-btn" onclick="window.location.href='ritual.html'">Cut</button>
+
+  <script>
+    const audio = document.getElementById('bg-audio');
+    const scene = document.getElementById('scene');
+    const promptWrap = document.getElementById('prompt-wrap');
+    const cutBtn = document.getElementById('cut-btn');
+    const input = document.getElementById('answer-input');
+    const errorMsg = document.getElementById('error-msg');
+
+    // Attempt autoplay immediately
+    function startAudio() {
+      audio.play().catch(() => {});
+    }
+
+    document.addEventListener('click', startAudio, { once: true });
+    document.addEventListener('keydown', startAudio, { once: true });
+    startAudio();
+
+    // After 10s: shift image up, reveal prompt
+    setTimeout(() => {
+      scene.classList.add('shifted');
+      setTimeout(() => {
+        promptWrap.classList.add('visible');
+        input.focus();
+      }, 900);
+    }, 10000);
+
+    // After 30s: fade in Cut button
+    setTimeout(() => {
+      cutBtn.classList.add('visible');
+    }, 30000);
+
+    // Answer check
+    function checkAnswer() {
+      const val = input.value.trim().toLowerCase();
+      if (val === 'gatha') {
+        promptWrap.style.opacity = '0';
+        promptWrap.style.pointerEvents = 'none';
+        setTimeout(() => window.location.href = 'gatha.html', 800);
+      } else {
+        errorMsg.classList.add('show');
+        input.value = '';
+        input.focus();
+        setTimeout(() => errorMsg.classList.remove('show'), 2200);
+      }
+    }
+
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkAnswer();
+    });
+  </script>
+</body>
+</html>
