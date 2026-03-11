@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<meta charset="UTF-8">
+<title>The Tower Within</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; font-family: 'Georgia', serif; }
+  canvas { display: block; }
+  #ui {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 10;
+  }
+  #crosshair {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px; height: 16px;
+  }
+  #crosshair::before, #crosshair::after {
+    content: ''; position: absolute; background: rgba(255,255,255,0.7);
+  }
+  #crosshair::before { width: 2px; height: 16px; left: 7px; top: 0; }
+  #crosshair::after  { width: 16px; height: 2px; top: 7px; left: 0; }
+  #hint {
+    position: absolute; bottom: 60px; left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.75);
+    font-size: 14px; letter-spacing: 2px; text-transform: uppercase;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    transition: opacity 1s;
+  }
+  #location {
+    position: absolute; top: 30px; left: 50%;
+    transform: translateX(-50%);
+    color: rgba(255,255,255,0.5);
+    font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+  }
+  #start-screen {
+    position: fixed; inset: 0; background: #0a0a0a;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 100; cursor: pointer;
+    transition: opacity 1s;
+  }
+  #start-screen h1 {
+    color: #e8c87a; font-size: 48px; letter-spacing: 6px;
+    text-transform: uppercase; margin-bottom: 16px;
+    text-shadow: 0 0 40px rgba(232,200,122,0.4);
+  }
+  #start-screen p {
+    color: rgba(255,255,255,0.4); font-size: 13px; letter-spacing: 3px;
+    text-transform: uppercase; margin-bottom: 48px;
+  }
+  #start-screen .btn {
+    border: 1px solid rgba(232,200,122,0.5); color: #e8c87a;
+    padding: 14px 40px; letter-spacing: 4px; font-size: 13px;
+    text-transform: uppercase; background: transparent;
+    cursor: pointer; transition: all 0.3s;
+    pointer-events: all;
+  }
+  #start-screen .btn:hover { background: rgba(232,200,122,0.1); border-color: #e8c87a; }
+  .controls-hint {
+    position: absolute; bottom: 30px;
+    color: rgba(255,255,255,0.25); font-size: 11px; letter-spacing: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div id="start-screen">
+  <h1>The Tower Within</h1>
+  <p>Something waits at the top of the stairs</p>
+  <button class="btn" id="play-btn">Enter</button>
+  <div class="controls-hint">WASD / ARROWS — MOVE &nbsp;|&nbsp; MOUSE — LOOK &nbsp;|&nbsp; SPACE — JUMP</div>
+</div>
+
+<div id="ui">
+  <div id="crosshair"></div>
+  <div id="hint">Climb the stairs</div>
+  <div id="location"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ─── Scene Setup ─────────────────────────────────────────────────────────────
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x8a9baa);
+scene.fog = new THREE.Fog(0x8a9baa, 40, 160);
+
+const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 300);
+camera.position.set(0, 2, 2);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
+
+// ─── Lighting ─────────────────────────────────────────────────────────────────
+const ambientOut = new THREE.AmbientLight(0xaab8c2, 0.6);
+scene.add(ambientOut);
+
+const sunLight = new THREE.DirectionalLight(0xffeedd, 0.9);
+sunLight.position.set(60, 120, 40);
+sunLight.castShadow = true;
+sunLight.shadow.mapSize.set(2048, 2048);
+sunLight.shadow.camera.near = 1;
+sunLight.shadow.camera.far = 400;
+sunLight.shadow.camera.left = -120;
+sunLight.shadow.camera.right = 120;
+sunLight.shadow.camera.top = 120;
+sunLight.shadow.camera.bottom = -120;
+scene.add(sunLight);
+
+// ─── Materials ────────────────────────────────────────────────────────────────
+const mat = (color, rough = 0.9, metal = 0) =>
+  new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal });
+
+const concreteMat  = mat(0x9aa0a6, 0.95);
+const stairMat     = mat(0x7a8088, 0.9);
+const groundMat    = mat(0x6b7075, 0.98);
+const towerMat     = mat(0x8c9298, 0.92);
+
+// Interior materials
+const woodWallMat  = mat(0x6b3e1e, 0.8);
+const floorWoodMat = mat(0x8b5e2a, 0.7);
+const ceilingMat   = mat(0x5a3010, 0.85);
+const orangeMat    = mat(0xe07230, 0.7);
+const creamMat     = mat(0xf5e6c8, 0.8);
+const darkWoodMat  = mat(0x3d1f08, 0.75);
+const rugMat       = mat(0xb03520, 0.95);
+const glassMat     = new THREE.MeshStandardMaterial({
+  color: 0x88ccff, roughness: 0.05, metalness: 0.1,
+  transparent: true, opacity: 0.25, side: THREE.DoubleSide
+});
+const lampMat      = new THREE.MeshStandardMaterial({ color: 0xffe8a0, emissive: 0xffe8a0, emissiveIntensity: 1.2 });
+const metalMat     = mat(0x444444, 0.4, 0.8);
+const bookColors   = [0xc0392b, 0x2980b9, 0x27ae60, 0xe67e22, 0x8e44ad, 0x16a085];
+
+// ─── Geometry Helpers ─────────────────────────────────────────────────────────
+function box(w, h, d, mat, x, y, z, shadow = true) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  m.position.set(x, y, z);
+  if (shadow) { m.castShadow = true; m.receiveShadow = true; }
+  scene.add(m);
+  return m;
+}
+
+function cylinder(rt, rb, h, seg, mat, x, y, z) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), mat);
+  m.position.set(x, y, z);
+  m.castShadow = true; m.receiveShadow = true;
+  scene.add(m);
+  return m;
+}
+
+// ─── Ground ────────────────────────────────────────────────────────────────────
+box(400, 1, 400, groundMat, 0, -0.5, 0);
+
+// ─── Grand Staircase ──────────────────────────────────────────────────────────
+const STEP_W = 18, STEP_H = 0.4, STEP_D = 1.0;
+const NUM_STEPS = 28;
+const stairObjects = [];
+
+for (let i = 0; i < NUM_STEPS; i++) {
+  const s = box(STEP_W, STEP_H, STEP_D, stairMat, 0, i * STEP_H, -(i * STEP_D * 0.9) + 4);
+  stairObjects.push({ mesh: s, y: i * STEP_H + STEP_H / 2, z: -(i * STEP_D * 0.9) + 4, w: STEP_W, d: STEP_D });
+  // Side walls
+  if (i > 0) {
+    box(0.5, i * STEP_H + STEP_H, 0.5, concreteMat,  STEP_W / 2, (i * STEP_H) / 2, -(i * STEP_D * 0.9) + 4);
+    box(0.5, i * STEP_H + STEP_H, 0.5, concreteMat, -STEP_W / 2, (i * STEP_H) / 2, -(i * STEP_D * 0.9) + 4);
+  }
+}
+
+// Landing platform at top
+const landingY = NUM_STEPS * STEP_H;
+const landingZ = -(NUM_STEPS * STEP_D * 0.9) + 4;
+box(24, 0.4, 20, stairMat, 0, landingY, landingZ - 6);
+
+// ─── Grey Tower Grid ──────────────────────────────────────────────────────────
+const towers = [];
+const towerPositions = [
+  // Around the staircase top
+  { x: -16, z: landingZ - 6 }, { x: 16, z: landingZ - 6 },
+  { x: -16, z: landingZ - 18 }, { x: 0, z: landingZ - 22 }, { x: 16, z: landingZ - 18 },
+  // Scattered around
+  { x: -40, z: -20 }, { x: 40, z: -20 }, { x: -60, z: 10 }, { x: 60, z: 10 },
+  { x: -25, z: 30 }, { x: 25, z: 30 }, { x: 0, z: 50 },
+  { x: -55, z: -50 }, { x: 55, z: -50 }, { x: -10, z: -60 }, { x: 20, z: -70 },
+  { x: 80, z: -40 }, { x: -80, z: -40 }, { x: 70, z: 30 }, { x: -70, z: 30 },
+];
+
+// Special tower — the one the player enters
+const SPECIAL_IDX = 2; // one of the ones near the top landing
+
+towerPositions.forEach((pos, idx) => {
+  const isSpecial = idx === SPECIAL_IDX;
+  const tw = 8 + Math.random() * 4;
+  const th = 20 + Math.random() * 30;
+  const td = 8 + Math.random() * 4;
+
+  const towerBase = new THREE.Group();
+  scene.add(towerBase);
+  towerBase.position.set(pos.x, 0, pos.z);
+
+  const tW = isSpecial ? 10 : tw;
+  const tH = isSpecial ? 30 : th;
+  const tD = isSpecial ? 10 : td;
+
+  // Walls (hollow for special tower)
+  if (isSpecial) {
+    const wallThick = 0.6;
+    // Front wall (with door hole)
+    const frontGroup = new THREE.Group();
+    towerBase.add(frontGroup);
+    // Left of door
+    const doorW = 2.4, doorH = 4;
+    const sideW = (tW - doorW) / 2 - wallThick;
+    [[-tD/2 + wallThick/2, 0], [tD/2 - wallThick/2, 0]].forEach(([zOff]) => {});
+
+    // Solid walls except front
+    // Back wall
+    const bw = new THREE.Mesh(new THREE.BoxGeometry(tW, tH, wallThick), towerMat);
+    bw.position.set(0, tH/2, -tD/2); bw.castShadow = true; bw.receiveShadow = true;
+    towerBase.add(bw);
+    // Left wall
+    const lw = new THREE.Mesh(new THREE.BoxGeometry(wallThick, tH, tD), towerMat);
+    lw.position.set(-tW/2, tH/2, 0); lw.castShadow = true; lw.receiveShadow = true;
+    towerBase.add(lw);
+    // Right wall
+    const rw = new THREE.Mesh(new THREE.BoxGeometry(wallThick, tH, tD), towerMat);
+    rw.position.set(tW/2, tH/2, 0); rw.castShadow = true; rw.receiveShadow = true;
+    towerBase.add(rw);
+    // Front wall - left of door
+    const fl = new THREE.Mesh(new THREE.BoxGeometry((tW - doorW)/2, tH, wallThick), towerMat);
+    fl.position.set(-(doorW/2 + (tW-doorW)/4), tH/2, tD/2); fl.castShadow = true; fl.receiveShadow = true;
+    towerBase.add(fl);
+    // Front wall - right of door
+    const fr = new THREE.Mesh(new THREE.BoxGeometry((tW - doorW)/2, tH, wallThick), towerMat);
+    fr.position.set(doorW/2 + (tW-doorW)/4, tH/2, tD/2); fr.castShadow = true; fr.receiveShadow = true;
+    towerBase.add(fr);
+    // Front wall - above door
+    const fa = new THREE.Mesh(new THREE.BoxGeometry(doorW, tH - doorH, wallThick), towerMat);
+    fa.position.set(0, doorH + (tH-doorH)/2, tD/2); fa.castShadow = true; fa.receiveShadow = true;
+    towerBase.add(fa);
+
+    towers.push({ pos, w: tW, h: tH, d: tD, isSpecial: true, group: towerBase });
+    buildInterior(towerBase, tW, tH, tD, wallThick);
+  } else {
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(tW, tH, tD), towerMat);
+    mesh.position.set(0, tH / 2, 0);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    towerBase.add(mesh);
+    // Small windows
+    for (let w = 0; w < 3; w++) {
+      const wm = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.8, 0.1), mat(0x445566, 0.2, 0.3));
+      wm.position.set((Math.random() - 0.5) * (tW * 0.6), 4 + w * 5, tD/2 + 0.05);
+      towerBase.add(wm);
+    }
+    towers.push({ pos, w: tW, h: tH, d: tD, isSpecial: false });
+  }
+});
+
+// ─── Interior Builder ─────────────────────────────────────────────────────────
+function buildInterior(group, W, H, D, wt) {
+  const add = (geo, mat, x, y, z, rx=0, ry=0, rz=0) => {
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(x, y, z);
+    m.rotation.set(rx, ry, rz);
+    m.castShadow = true; m.receiveShadow = true;
+    group.add(m); return m;
+  };
+
+  // Floor
+  add(new THREE.BoxGeometry(W - wt*2, 0.15, D - wt*2), floorWoodMat, 0, 0.075, 0);
+  // Ceiling
+  add(new THREE.BoxGeometry(W - wt*2, 0.15, D - wt*2), ceilingMat, 0, H - 0.075, 0);
+
+  // Skylight — glass panel in ceiling
+  add(new THREE.BoxGeometry(3.5, 0.05, 3.5), glassMat, 0, H + 0.1, -D*0.15);
+  // Skylight frame
+  const sfMat = darkWoodMat;
+  add(new THREE.BoxGeometry(3.8, 0.15, 0.15), sfMat, 0, H - 0.07, -D*0.15 - 1.85);
+  add(new THREE.BoxGeometry(3.8, 0.15, 0.15), sfMat, 0, H - 0.07, -D*0.15 + 1.85);
+  add(new THREE.BoxGeometry(0.15, 0.15, 3.8), sfMat, -1.85, H - 0.07, -D*0.15);
+  add(new THREE.BoxGeometry(0.15, 0.15, 3.8), sfMat,  1.85, H - 0.07, -D*0.15);
+
+  // Skylight point light
+  const skyLight = new THREE.PointLight(0xfff4cc, 3, 18);
+  skyLight.position.set(0, H - 1, -D*0.15);
+  group.add(skyLight);
+
+  // Warm interior ambient
+  const warmAmb = new THREE.PointLight(0xff8c42, 1.8, 14);
+  warmAmb.position.set(0, H * 0.5, 0);
+  group.add(warmAmb);
+
+  // Rug
+  add(new THREE.BoxGeometry(5, 0.05, 5.5), rugMat, 0, 0.12, -D*0.15);
+
+  // Sofa (orange)
+  // Body
+  add(new THREE.BoxGeometry(4.5, 0.7, 1.5), orangeMat, 0, 0.45, -D/2 + wt + 1.5);
+  // Back
+  add(new THREE.BoxGeometry(4.5, 1.1, 0.4), orangeMat, 0, 1.2, -D/2 + wt + 0.85);
+  // Arms
+  add(new THREE.BoxGeometry(0.4, 0.9, 1.5), orangeMat, -2.25, 0.65, -D/2 + wt + 1.5);
+  add(new THREE.BoxGeometry(0.4, 0.9, 1.5), orangeMat,  2.25, 0.65, -D/2 + wt + 1.5);
+  // Cushions
+  add(new THREE.BoxGeometry(1.3, 0.3, 1.2), creamMat, -1.3, 0.95, -D/2 + wt + 1.55);
+  add(new THREE.BoxGeometry(1.3, 0.3, 1.2), creamMat,  0,   0.95, -D/2 + wt + 1.55);
+  add(new THREE.BoxGeometry(1.3, 0.3, 1.2), creamMat,  1.3, 0.95, -D/2 + wt + 1.55);
+
+  // Armchair
+  add(new THREE.BoxGeometry(1.8, 0.65, 1.6), orangeMat, W/2 - wt - 1.3, 0.42, -1);
+  add(new THREE.BoxGeometry(1.8, 1.0, 0.35), orangeMat, W/2 - wt - 1.3, 1.1, -1.7);
+  add(new THREE.BoxGeometry(0.35, 0.8, 1.6), orangeMat, W/2 - wt - 0.5, 0.6, -1);
+  add(new THREE.BoxGeometry(0.35, 0.8, 1.6), orangeMat, W/2 - wt - 2.1, 0.6, -1);
+
+  // Coffee table
+  add(new THREE.BoxGeometry(2.2, 0.1, 1.0), darkWoodMat, 0, 0.6, -D*0.15 + 1.5);
+  // Table legs
+  [[-0.9, -0.35], [-0.9, 0.35], [0.9, -0.35], [0.9, 0.35]].forEach(([lx, lz]) =>
+    add(new THREE.BoxGeometry(0.08, 0.5, 0.08), darkWoodMat, lx, 0.3, -D*0.15 + 1.5 + lz));
+  // Book on table
+  add(new THREE.BoxGeometry(0.5, 0.07, 0.7), mat(0x8b1a1a, 0.8), 0.3, 0.67, -D*0.15 + 1.5);
+
+  // Bookshelf (left wall)
+  add(new THREE.BoxGeometry(0.25, 4.5, 3.5), darkWoodMat, -W/2 + wt + 0.12, 2.25, -D*0.15);
+  // Shelves
+  for (let sh = 0; sh < 4; sh++) {
+    add(new THREE.BoxGeometry(0.15, 0.08, 3.5), darkWoodMat, -W/2 + wt + 0.12, 0.8 + sh * 1.0, -D*0.15);
+    // Books
+    let bz = -D*0.15 - 1.4;
+    for (let b = 0; b < 6; b++) {
+      const bh = 0.55 + Math.random() * 0.3;
+      const bw2 = 0.12 + Math.random() * 0.1;
+      add(new THREE.BoxGeometry(0.12, bh, bw2),
+        mat(bookColors[b % bookColors.length], 0.8),
+        -W/2 + wt + 0.22, 0.88 + sh * 1.0 + bh/2, bz);
+      bz += bw2 + 0.04;
+    }
+  }
+
+  // Floor lamp
+  // Base
+  add(new THREE.CylinderGeometry(0.25, 0.3, 0.08, 12), darkWoodMat, -1.5, 0.04, -D/2 + wt + 3.5);
+  // Pole
+  add(new THREE.CylinderGeometry(0.04, 0.04, 3.5, 8), metalMat, -1.5, 1.8, -D/2 + wt + 3.5);
+  // Shade
+  add(new THREE.CylinderGeometry(0.5, 0.7, 0.6, 12), mat(0xf0d090, 0.6), -1.5, 3.7, -D/2 + wt + 3.5);
+  // Bulb glow
+  const lampLight = new THREE.PointLight(0xffcc66, 2.5, 8);
+  lampLight.position.set(-1.5, 3.3, -D/2 + wt + 3.5);
+  group.add(lampLight);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.15, 8, 8), lampMat);
+  bulb.position.set(-1.5, 3.4, -D/2 + wt + 3.5);
+  group.add(bulb);
+
+  // Side table + plant
+  add(new THREE.CylinderGeometry(0.35, 0.3, 0.6, 8), darkWoodMat, W/2 - wt - 0.9, 0.3, -D/2 + wt + 0.5);
+  // Pot
+  add(new THREE.CylinderGeometry(0.2, 0.15, 0.4, 8), mat(0x7a4a20, 0.9), W/2 - wt - 0.9, 0.82, -D/2 + wt + 0.5);
+  // Plant leaves (simple spheres)
+  const plantMat2 = mat(0x2d6a1f, 0.9);
+  add(new THREE.SphereGeometry(0.35, 6, 5), plantMat2, W/2 - wt - 0.9, 1.35, -D/2 + wt + 0.5);
+  add(new THREE.SphereGeometry(0.25, 6, 5), plantMat2, W/2 - wt - 0.6, 1.5, -D/2 + wt + 0.3);
+  add(new THREE.SphereGeometry(0.2, 6, 5), plantMat2,  W/2 - wt - 1.1, 1.45, -D/2 + wt + 0.6);
+
+  // Painting on back wall
+  add(new THREE.BoxGeometry(2.2, 1.6, 0.06), mat(0x1a0a00, 0.8), 0, 4.5, -D/2 + wt + 0.08);
+  add(new THREE.BoxGeometry(1.9, 1.3, 0.05), mat(0xd4895a, 0.7), 0, 4.5, -D/2 + wt + 0.12);
+
+  // Wall sconces
+  [-2.5, 2.5].forEach(wx => {
+    add(new THREE.BoxGeometry(0.15, 0.4, 0.3), darkWoodMat, wx, 5.5, -D/2 + wt + 0.2);
+    const sconce = new THREE.PointLight(0xffaa44, 1.5, 5);
+    sconce.position.set(wx, 5.8, -D/2 + wt + 0.5);
+    group.add(sconce);
+    const sbulb = new THREE.Mesh(new THREE.SphereGeometry(0.1, 6, 6), lampMat);
+    sbulb.position.set(wx, 5.7, -D/2 + wt + 0.3);
+    group.add(sbulb);
+  });
+
+  // Wooden ceiling beams
+  for (let b = 0; b < 3; b++) {
+    add(new THREE.BoxGeometry(W - wt*2, 0.2, 0.3), darkWoodMat, 0, H - 0.3, -D*0.4 + b * (D * 0.3));
+  }
+}
+
+// ─── Player ────────────────────────────────────────────────────────────────────
+const player = {
+  pos: new THREE.Vector3(0, 1.7, 6),
+  vel: new THREE.Vector3(),
+  onGround: false,
+  yaw: 0,
+  pitch: 0,
+  height: 1.7,
+  radius: 0.35,
+  speed: 7,
+  jumpForce: 8
+};
+camera.position.copy(player.pos);
+
+// ─── Input ─────────────────────────────────────────────────────────────────────
+const keys = {};
+document.addEventListener('keydown', e => keys[e.code] = true);
+document.addEventListener('keyup',   e => keys[e.code] = false);
+
+let locked = false;
+document.addEventListener('mousemove', e => {
+  if (!locked) return;
+  player.yaw   -= e.movementX * 0.002;
+  player.pitch -= e.movementY * 0.002;
+  player.pitch  = Math.max(-1.3, Math.min(1.3, player.pitch));
+});
+document.addEventListener('pointerlockchange', () => { locked = !!document.pointerLockElement; });
+renderer.domElement.addEventListener('click', () => {
+  if (started) renderer.domElement.requestPointerLock();
+});
+
+// ─── Collision Helpers ────────────────────────────────────────────────────────
+function getFloorY(px, pz) {
+  let highest = -100;
+
+  // Ground
+  highest = 0;
+
+  // Stairs
+  for (const s of stairObjects) {
+    const hw = STEP_W / 2 + 0.1, hd = STEP_D / 2 + 0.1;
+    if (Math.abs(px - 0) < hw && Math.abs(pz - s.z) < hd) {
+      highest = Math.max(highest, s.y);
+    }
+  }
+
+  // Landing
+  const lw = 12, ld = 10;
+  if (Math.abs(px - 0) < lw && Math.abs(pz - (landingZ - 6)) < ld) {
+    highest = Math.max(highest, landingY + 0.4);
+  }
+
+  // Special tower interior floor
+  const sp = towerPositions[SPECIAL_IDX];
+  const tW = 10, tD = 10, wt = 0.6;
+  if (Math.abs(px - sp.x) < tW/2 - wt && Math.abs(pz - sp.z) < tD/2 - wt) {
+    highest = Math.max(highest, 0.15);
+  }
+
+  return highest;
+}
+
+function wallCollide(px, pz) {
+  // Grey towers (solid)
+  for (let i = 0; i < towerPositions.length; i++) {
+    if (i === SPECIAL_IDX) continue;
+    const t = towers[i];
+    if (!t) continue;
+    const hw = t.w / 2 + player.radius;
+    const hd = t.d / 2 + player.radius;
+    const dx = px - t.pos.x, dz = pz - t.pos.z;
+    if (Math.abs(dx) < hw && Math.abs(dz) < hd) {
+      // Push out shortest axis
+      const ox = hw - Math.abs(dx), oz = hd - Math.abs(dz);
+      if (ox < oz) return { x: dx > 0 ? ox : -ox, z: 0 };
+      else         return { x: 0, z: dz > 0 ? oz : -oz };
+    }
+  }
+  // Special tower walls (only block outer walls, door is open)
+  const sp = towerPositions[SPECIAL_IDX];
+  const tW = 10, tD = 10, wt = 0.6;
+  const dx = px - sp.x, dz = pz - sp.z;
+  const inside = Math.abs(dx) < tW/2 - wt && Math.abs(dz) < tD/2 - wt;
+  const inBounds = Math.abs(dx) < tW/2 + player.radius && Math.abs(dz) < tD/2 + player.radius;
+  if (inBounds && !inside) {
+    // Check door (front face, z = +tD/2, |dx| < doorW/2 = 1.2)
+    const onFront = dz > 0 && Math.abs(dz - tD/2) < wt + player.radius;
+    const inDoor  = Math.abs(dx) < 1.2 && player.pos.y < 4 + landingY;
+    if (onFront && inDoor) return null;
+
+    const ox = tW/2 + player.radius - Math.abs(dx);
+    const oz = tD/2 + player.radius - Math.abs(dz);
+    if (ox < oz) return { x: dx > 0 ? ox : -ox, z: 0 };
+    else         return { x: 0, z: dz > 0 ? oz : -oz };
+  }
+  return null;
+}
+
+// ─── HUD ───────────────────────────────────────────────────────────────────────
+const hintEl = document.getElementById('hint');
+const locEl  = document.getElementById('location');
+let lastHint = '', hintTimer = 0;
+
+function updateHint(px, py, pz) {
+  let hint = '', loc = '';
+  const sp = towerPositions[SPECIAL_IDX];
+  const insideTower = Math.abs(px - sp.x) < 5 - 0.6 && Math.abs(pz - sp.z) < 5 - 0.6;
+
+  if (insideTower) {
+    loc = 'Interior';
+    hint = '';
+  } else if (py < 1.5 && pz > 2) {
+    loc = 'Ground Level';
+    hint = 'Climb the stairs ↑';
+  } else if (py > landingY - 1) {
+    loc = 'Upper Plaza';
+    hint = 'Enter the tower ahead';
+  } else {
+    loc = 'Staircase';
+    hint = 'Keep climbing';
+  }
+
+  if (hint !== lastHint) {
+    hintEl.style.opacity = '0';
+    setTimeout(() => {
+      hintEl.textContent = hint;
+      hintEl.style.opacity = hint ? '1' : '0';
+    }, 400);
+    lastHint = hint;
+  }
+  locEl.textContent = loc;
+}
+
+// ─── Game Loop ─────────────────────────────────────────────────────────────────
+let started = false;
+let clock = new THREE.Clock();
+
+document.getElementById('play-btn').addEventListener('click', () => {
+  const ss = document.getElementById('start-screen');
+  ss.style.opacity = '0';
+  setTimeout(() => ss.style.display = 'none', 1000);
+  renderer.domElement.requestPointerLock();
+  started = true;
+  clock.start();
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (!started) { renderer.render(scene, camera); return; }
+
+  // Movement
+  const fwd = new THREE.Vector3(-Math.sin(player.yaw), 0, -Math.cos(player.yaw));
+  const right = new THREE.Vector3(Math.cos(player.yaw), 0, -Math.sin(player.yaw));
+  const move = new THREE.Vector3();
+
+  if (keys['KeyW'] || keys['ArrowUp'])    move.add(fwd);
+  if (keys['KeyS'] || keys['ArrowDown'])  move.sub(fwd);
+  if (keys['KeyA'] || keys['ArrowLeft'])  move.sub(right);
+  if (keys['KeyD'] || keys['ArrowRight']) move.add(right);
+
+  if (move.lengthSq() > 0) { move.normalize(); move.multiplyScalar(player.speed * dt); }
+
+  // Gravity
+  player.vel.y -= 22 * dt;
+  if ((keys['Space'] || keys['KeyE']) && player.onGround) {
+    player.vel.y = player.jumpForce;
+    player.onGround = false;
+  }
+
+  player.pos.x += move.x;
+  player.pos.z += move.z;
+
+  // Wall collision
+  const push = wallCollide(player.pos.x, player.pos.z);
+  if (push) { player.pos.x += push.x; player.pos.z += push.z; }
+
+  // Vertical
+  player.pos.y += player.vel.y * dt;
+  const floor = getFloorY(player.pos.x, player.pos.z) + player.height;
+  if (player.pos.y <= floor) {
+    player.pos.y = floor;
+    player.vel.y = 0;
+    player.onGround = true;
+  } else {
+    player.onGround = false;
+  }
+
+  // Camera
+  camera.position.copy(player.pos);
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = player.yaw;
+  camera.rotation.x = player.pitch;
+
+  updateHint(player.pos.x, player.pos.y, player.pos.z);
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// ─── Resize ───────────────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

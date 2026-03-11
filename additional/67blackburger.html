@@ -1,0 +1,848 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+  <link rel="icon" type="image/x-icon" href="additional/favicon.ico">
+<title>67 BLACK BURGER - THE OFFICIAL SITE - updated 11/14/2003</title>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="description" content="67 Black Burger horror movie official website fan page blog updates cast crew release date">
+<meta name="keywords" content="67 black burger horror movie 2003 independent film scary">
+
+<style type="text/css">
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Creepster&family=Courier+Prime&family=VT323&display=swap');
+
+body {
+  background-color: #000000;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23000'/%3E%3Crect width='1' height='1' fill='%23111' x='0' y='0'/%3E%3Crect width='1' height='1' fill='%23111' x='2' y='2'/%3E%3C/svg%3E");
+  color: #cc0000;
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  font-size: 13px;
+  margin: 0;
+  padding: 0;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Ccircle cx='8' cy='8' r='6' fill='%23cc0000' opacity='0.8'/%3E%3C/svg%3E") 8 8, crosshair;
+}
+
+a { color: #ff3300; text-decoration: none; }
+a:hover { color: #ffff00; text-decoration: underline; }
+a:visited { color: #990000; }
+
+#outer-table {
+  width: 780px;
+  margin: 0 auto;
+  border: 0;
+}
+
+/* ===== HEADER ===== */
+#header {
+  background-color: #000;
+  text-align: center;
+  padding: 5px 0 0 0;
+  border-bottom: 3px solid #cc0000;
+}
+
+#header h1 {
+  font-family: 'Creepster', cursive;
+  font-size: 72px;
+  color: #cc0000;
+  margin: 0;
+  padding: 10px 0 0 0;
+  text-shadow: 3px 3px 0px #330000, 0 0 20px #ff0000, 0 0 40px #990000;
+  letter-spacing: 8px;
+  line-height: 1;
+}
+
+#header h2 {
+  font-family: 'Special Elite', serif;
+  font-size: 16px;
+  color: #888888;
+  margin: 0;
+  padding: 2px 0 8px 0;
+  letter-spacing: 4px;
+  font-weight: normal;
+}
+
+/* marquee */
+.marquee-bar {
+  background-color: #1a0000;
+  border-top: 1px solid #660000;
+  border-bottom: 1px solid #660000;
+  padding: 4px 0;
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  color: #ff4400;
+  overflow: hidden;
+}
+
+/* ===== NAV ===== */
+#navbar {
+  background-color: #0d0000;
+  border-bottom: 2px solid #440000;
+  padding: 6px 0;
+  text-align: center;
+}
+
+#navbar a {
+  font-family: 'Special Elite', serif;
+  font-size: 13px;
+  color: #cc3300;
+  padding: 4px 14px;
+  border: 1px solid #440000;
+  background: #110000;
+  margin: 0 3px;
+  display: inline-block;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+#navbar a:hover {
+  background: #330000;
+  border-color: #cc0000;
+  color: #ff6600;
+  text-decoration: none;
+}
+
+/* ===== LAYOUT ===== */
+#main-layout {
+  display: table;
+  width: 100%;
+}
+
+#left-col {
+  display: table-cell;
+  width: 160px;
+  vertical-align: top;
+  padding: 10px 8px;
+  border-right: 1px solid #330000;
+  background-color: #050000;
+}
+
+#content-col {
+  display: table-cell;
+  vertical-align: top;
+  padding: 10px 15px;
+}
+
+#right-col {
+  display: table-cell;
+  width: 150px;
+  vertical-align: top;
+  padding: 10px 8px;
+  border-left: 1px solid #330000;
+  background-color: #050000;
+}
+
+/* ===== SIDEBAR WIDGETS ===== */
+.sidebar-box {
+  border: 1px solid #550000;
+  background-color: #0a0000;
+  margin-bottom: 12px;
+  padding: 0;
+}
+
+.sidebar-box-title {
+  background-color: #330000;
+  color: #ff6600;
+  font-family: 'Special Elite', serif;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #550000;
+  text-align: center;
+}
+
+.sidebar-box-content {
+  padding: 8px;
+  font-size: 11px;
+  color: #aa8888;
+  line-height: 1.6;
+}
+
+.sidebar-box-content a {
+  font-size: 11px;
+  color: #cc4400;
+  display: block;
+  margin-bottom: 3px;
+}
+
+/* the "movie poster" in sidebar */
+.fake-poster {
+  width: 140px;
+  height: 200px;
+  background: linear-gradient(170deg, #1a0000 0%, #000 40%, #0d0a00 100%);
+  border: 2px solid #550000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 0 30px #000, 0 0 10px #660000;
+}
+
+.fake-poster::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.15) 2px,
+    rgba(0,0,0,0.15) 4px
+  );
+}
+
+.poster-burger {
+  font-size: 48px;
+  filter: grayscale(1) sepia(1) hue-rotate(300deg) saturate(5) brightness(0.4);
+  margin-bottom: 5px;
+  text-shadow: 0 0 20px #ff0000;
+}
+
+.poster-title {
+  font-family: 'Creepster', cursive;
+  font-size: 18px;
+  color: #cc0000;
+  text-align: center;
+  line-height: 1.1;
+  text-shadow: 0 0 8px #ff0000;
+  z-index: 1;
+}
+
+.poster-tagline {
+  font-family: 'Special Elite', serif;
+  font-size: 8px;
+  color: #886666;
+  text-align: center;
+  margin-top: 5px;
+  letter-spacing: 1px;
+  z-index: 1;
+  padding: 0 5px;
+}
+
+/* ===== BLOG POSTS ===== */
+.blog-post {
+  border: 1px solid #330000;
+  background-color: #080000;
+  margin-bottom: 16px;
+  padding: 0;
+}
+
+.post-header {
+  background: linear-gradient(90deg, #2a0000, #1a0000);
+  padding: 6px 10px;
+  border-bottom: 1px solid #440000;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.post-title {
+  font-family: 'Special Elite', serif;
+  font-size: 16px;
+  color: #ff4400;
+  font-weight: bold;
+}
+
+.post-date {
+  font-size: 10px;
+  color: #664444;
+  font-family: 'Courier Prime', monospace;
+}
+
+.post-author {
+  font-size: 10px;
+  color: #884444;
+  padding: 3px 10px;
+  border-bottom: 1px dashed #220000;
+  font-style: italic;
+}
+
+.post-body {
+  padding: 10px 12px;
+  color: #bbaaaa;
+  line-height: 1.75;
+  font-size: 13px;
+}
+
+.post-body p {
+  margin: 0 0 10px 0;
+}
+
+.post-body b, .post-body strong {
+  color: #ff6600;
+}
+
+.post-body .highlight {
+  color: #ff3300;
+  font-weight: bold;
+}
+
+.post-footer {
+  background-color: #050000;
+  padding: 5px 12px;
+  border-top: 1px dashed #220000;
+  font-size: 10px;
+  color: #553333;
+  display: flex;
+  justify-content: space-between;
+}
+
+.post-footer a {
+  font-size: 10px;
+  color: #884444;
+}
+
+/* ===== COMMENTS ===== */
+.comments-section {
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid #220000;
+}
+
+.comment {
+  border-left: 3px solid #440000;
+  padding: 5px 8px;
+  margin-bottom: 8px;
+  background-color: #060000;
+}
+
+.comment-meta {
+  font-size: 10px;
+  color: #664444;
+  margin-bottom: 3px;
+}
+
+.comment-meta .username {
+  color: #ff6600;
+  font-weight: bold;
+}
+
+.comment-body {
+  font-size: 12px;
+  color: #997777;
+  line-height: 1.5;
+}
+
+/* ===== MISC ===== */
+.section-divider {
+  border: none;
+  border-top: 1px solid #330000;
+  margin: 14px 0;
+}
+
+.page-title-bar {
+  background: linear-gradient(90deg, #330000, #1a0000, #000);
+  padding: 5px 10px;
+  font-family: 'Special Elite', serif;
+  font-size: 14px;
+  color: #cc3300;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  border-left: 4px solid #cc0000;
+  margin-bottom: 12px;
+}
+
+/* blinking stuff */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.blink {
+  animation: blink 1.2s step-start infinite;
+  color: #ff0000;
+  font-weight: bold;
+}
+
+.blink-slow {
+  animation: blink 2s step-start infinite;
+}
+
+/* visitor counter box */
+.counter-box {
+  background: #000;
+  border: 1px solid #440000;
+  font-family: 'VT323', monospace;
+  font-size: 22px;
+  color: #00ff00;
+  padding: 4px 8px;
+  text-align: center;
+  letter-spacing: 3px;
+  text-shadow: 0 0 6px #00ff00;
+}
+
+/* guestbook snippet */
+.guestbook-entry {
+  font-size: 11px;
+  color: #886666;
+  border-bottom: 1px dashed #220000;
+  padding: 4px 0;
+}
+.guestbook-entry .gb-name {
+  color: #ff6600;
+  font-weight: bold;
+}
+
+/* footer */
+#footer {
+  background-color: #080000;
+  border-top: 2px solid #330000;
+  text-align: center;
+  padding: 10px;
+  font-size: 10px;
+  color: #443333;
+}
+
+#footer a { font-size: 10px; }
+
+/* WARNING gif stand-in */
+.warning-gif {
+  text-align: center;
+  font-family: 'VT323', monospace;
+  font-size: 13px;
+  color: #ff0000;
+  border: 1px dashed #440000;
+  padding: 4px;
+  margin: 8px 0;
+  background: #0a0000;
+  animation: blink 1.8s step-start infinite;
+}
+
+/* horizontal rule styling */
+hr.blood {
+  border: none;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #660000, #cc0000, #660000, transparent);
+  margin: 10px 0;
+}
+
+.animated-blood {
+  font-size: 14px;
+  letter-spacing: 2px;
+  animation: drip 3s ease-in-out infinite alternate;
+}
+@keyframes drip {
+  from { color: #880000; }
+  to { color: #ff2200; }
+}
+
+.embed-box {
+  background: #0a0000;
+  border: 1px solid #333;
+  padding: 8px;
+  margin: 10px 0;
+  font-size: 11px;
+  color: #777;
+}
+
+.star-rating {
+  color: #ff6600;
+  letter-spacing: 2px;
+}
+
+.spoiler-tag {
+  background: #cc0000;
+  color: #cc0000;
+  font-size: 11px;
+  padding: 0 4px;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid #880000;
+}
+.spoiler-tag:hover {
+  color: #fff;
+}
+
+/* Top banner ad look */
+.fake-banner-ad {
+  width: 468px;
+  height: 60px;
+  background: linear-gradient(135deg, #000 0%, #1a0000 50%, #000 100%);
+  border: 1px solid #550000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 8px auto;
+  font-family: 'Creepster', cursive;
+  font-size: 22px;
+  color: #ff3300;
+  letter-spacing: 3px;
+  text-shadow: 0 0 10px #ff0000;
+  cursor: pointer;
+}
+
+.fake-banner-ad span {
+  font-size: 11px;
+  color: #884444;
+  display: block;
+  letter-spacing: 1px;
+  font-family: 'Special Elite', serif;
+}
+
+</style>
+</head>
+<body>
+
+<table id="outer-table" cellpadding="0" cellspacing="0">
+<tr><td>
+
+<!-- HEADER -->
+<div id="header">
+  <div class="fake-banner-ad">
+    67 BLACK BURGER &nbsp;·&nbsp; <span style="display:inline; font-size:13px;">COMING TO THEATERS FALL 2004</span>
+  </div>
+  <h1>67 BLACK BURGER</h1>
+  <h2>:: OFFICIAL MOVIE WEBSITE &amp; FAN BLOG ::</h2>
+</div>
+
+<!-- MARQUEE -->
+<div class="marquee-bar">
+  <marquee behavior="scroll" direction="left" scrollamount="3">
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    ★ NEW POST: BEHIND THE SCENES PHOTOS UPLOADED 11/14/03 ★ &nbsp;&nbsp;&nbsp;
+    THEATRICAL RELEASE: OCTOBER 31, 2004 &nbsp;&nbsp;&nbsp;
+    ★ "THE MOST TERRIFYING MEAL YOU'LL NEVER EAT" ★ &nbsp;&nbsp;&nbsp;
+    GUESTBOOK NOW OPEN - SIGN IT!!! &nbsp;&nbsp;&nbsp;
+    ★ DIRECTOR Q&amp;A THIS FRIDAY ON AIM - SCREENNAME: BLACKBURGER67 ★ &nbsp;&nbsp;&nbsp;
+    WARNING: THIS SITE CONTAINS DISTURBING CONTENT NOT SUITABLE FOR VIEWERS UNDER 17 &nbsp;&nbsp;&nbsp;
+    ★ WE ARE NOT RESPONSIBLE FOR NIGHTMARES ★ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+  </marquee>
+</div>
+
+<!-- NAVBAR -->
+<div id="navbar">
+  <a href="#">HOME</a>
+  <a href="#">ABOUT THE FILM</a>
+  <a href="#">CAST &amp; CREW</a>
+  <a href="#">PHOTO GALLERY</a>
+  <a href="#">TRAILER</a>
+  <a href="#">GUESTBOOK</a>
+  <a href="#">CONTACT</a>
+  <a href="#">LINKS</a>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div id="main-layout">
+
+  <!-- LEFT SIDEBAR -->
+  <div id="left-col">
+
+    <div class="fake-poster">
+      <div class="poster-burger">🍔</div>
+      <div class="poster-title">67<br>BLACK<br>BURGER</div>
+      <div class="poster-tagline">you won't be hungry after this</div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-box-title">⚠ SITE BEST VIEWED</div>
+      <div class="sidebar-box-content" style="font-size:10px; text-align:center;">
+        Internet Explorer 6.0<br>
+        800 x 600 resolution<br>
+        <span style="color:#664444;">Turn up your speakers!!</span>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-box-title">VISITORS</div>
+      <div class="sidebar-box-content" style="text-align:center;">
+        <div style="font-size:10px; color:#664444; margin-bottom:4px;">you are visitor #</div>
+        <div class="counter-box">008,412</div>
+        <div style="font-size:9px; color:#443333; margin-top:4px;">since Sept 3 2003</div>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-box-title">NAVIGATION</div>
+      <div class="sidebar-box-content">
+        <a href="#">&gt; Blog Archive</a>
+        <a href="#">&gt; Cast Bios</a>
+        <a href="#">&gt; Download Wallpaper</a>
+        <a href="#">&gt; Fan Art</a>
+        <a href="#">&gt; Forum (phpBB)</a>
+        <a href="#">&gt; Subscribe (RSS?)</a>
+        <a href="#">&gt; E-mail Webmaster</a>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-box-title">NOW PLAYING</div>
+      <div class="sidebar-box-content" style="text-align:center; font-size:10px; color:#664444;">
+        🎵 <i>Dread Encounter</i><br>
+        <span style="font-size:9px;">-- original score --</span><br><br>
+        <span style="color:#443333;">[midi file loading...]</span>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-box-title">RATE THIS SITE</div>
+      <div class="sidebar-box-content" style="text-align:center;">
+        <div class="star-rating">★★★★☆</div>
+        <div style="font-size:9px; color:#664444;">(47 votes)</div>
+        <div style="margin-top:6px;">
+          <a href="#" style="font-size:10px; display:inline; margin:0 3px;">Vote!</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /left-col -->
+
+
+  <!-- MAIN CONTENT -->
+  <div id="content-col">
+
+    <div class="page-title-bar">&#x2620; BLOG &amp; UPDATES &#x2620;</div>
+
+    <div class="warning-gif">
+      !! BEST VIEWED WITH JAVASCRIPT ENABLED !!
+    </div>
+
+    <!-- POST 1 -->
+    <div class="blog-post">
+      <div class="post-header">
+        <span class="post-title">behind the scenes pix are FINALLY up!!</span>
+        <span class="post-date">November 14, 2003 &mdash; 11:47 PM</span>
+      </div>
+      <div class="post-author">posted by: <a href="#">DarkDirectorMike</a> | category: <a href="#">Production Updates</a></div>
+      <div class="post-body">
+        <p>
+          ok so i know i said these would be up like 3 weeks ago lol sorry about that. my geocities account got suspended AGAIN because apparently 50mb isnt enough for a horror movie website??? anyway i moved everything to this new host and it should be way faster now.
+        </p>
+        <p>
+          anyway THE PHOTOS. we wrapped principal photography on october 28th which was like perfect timing right before halloween. <b>the grease pit scene came out INCREDIBLE</b>. derek had to sit in actual vegetable oil for like 4 hours and he was NOT happy about it but it looks so good on film i dont even care. you can kind of see his face in photo #7 and its hilarious.
+        </p>
+        <p>
+          for people asking about the burger itself -- yes it is a real prop. our effects guy Ray built it over 3 weeks out of latex, resin, and <span class="highlight">some stuff he wont tell us about</span>. it weighs like 14 pounds. it SMELLS. we asked him about it and he just said "trust the process." honestly at this point we do.
+        </p>
+        <p>
+          post-production starts January. we're aiming for a festival run in spring, then hopefully theatrical in the fall. keep checking back i'll try to update more than once a month this time lmao
+        </p>
+        <p style="font-size:11px; color:#664444;">
+          -- Mike<br>
+          <i>"you won't be hungry after this"</i>
+        </p>
+      </div>
+      <div class="post-footer">
+        <span><a href="#">comments (23)</a> | <a href="#">permalink</a> | <a href="#">e-mail this</a></span>
+        <span><a href="#">&lt;&lt; prev</a> | <a href="#">next &gt;&gt;</a></span>
+      </div>
+      <div class="comments-section">
+        <div style="font-size:10px; color:#553333; margin-bottom:6px; font-family:'Special Elite',serif; text-transform:uppercase; letter-spacing:2px;">Comments (showing 3 of 23)</div>
+        <div class="comment">
+          <div class="comment-meta"><span class="username">GoreHound_1987</span> &mdash; Nov 14 2003, 11:59 PM</div>
+          <div class="comment-body">FINALLY!! ive been checking this site every day for weeks. the grease pit sounds insane, cant wait to see it. derek is a trooper lol</div>
+        </div>
+        <div class="comment">
+          <div class="comment-meta"><span class="username">xX_ScreamQueen_Xx</span> &mdash; Nov 15 2003, 12:34 AM</div>
+          <div class="comment-body">ok wait what does the burger actually DO in the movie. i've read the synopsis like 4 times and i still don't fully get it. is it possessed? is it alive? does it actually eat people??? i need answers mike</div>
+        </div>
+        <div class="comment">
+          <div class="comment-meta"><span class="username">DarkDirectorMike</span> &mdash; Nov 15 2003, 1:02 AM</div>
+          <div class="comment-body">@ScreamQueen - all of the above ;) you'll understand when you see it. the "67" will make sense i promise. <b>no spoilers</b></div>
+        </div>
+        <div style="font-size:10px; color:#553333; text-align:right;"><a href="#">view all 23 comments &gt;&gt;</a></div>
+      </div>
+    </div>
+
+    <!-- POST 2 -->
+    <div class="blog-post">
+      <div class="post-header">
+        <span class="post-title">interview with actress JANA FERRIS up at HorrorWeb.net</span>
+        <span class="post-date">October 29, 2003 &mdash; 3:22 PM</span>
+      </div>
+      <div class="post-author">posted by: <a href="#">DarkDirectorMike</a> | category: <a href="#">Press</a></div>
+      <div class="post-body">
+        <p>
+          hey everyone!! our lead actress <b>Jana Ferris</b> (she plays Carrie, the night-shift manager) sat down with the guys at HorrorWeb.net last week and the interview is now live. she talks about the audition process, what it was like filming the walk-in freezer scene, and her thoughts on the ending. <span class="highlight">there are minor spoilers</span> so read at your own risk.
+        </p>
+        <p>
+          jana is genuinely one of the most committed actors ive ever worked with. she refused to use a stunt double for any of the food scenes. NONE of them. you will understand why thats a big deal when you see this movie.
+        </p>
+        <div class="embed-box">
+          <b style="color:#cc4400;">EXTERNAL LINK:</b><br>
+          <a href="#">&gt;&gt; Jana Ferris Interview @ HorrorWeb.net &lt;&lt;</a><br>
+          <span style="color:#555;">(opens in new window)</span>
+        </div>
+        <p>
+          also wrapping tomorrow!! i will post a big update this weekend with photos and maybe some footage if i can figure out how to compress it for dial-up. someone told me about this thing called DivX?? gonna look into it
+        </p>
+      </div>
+      <div class="post-footer">
+        <span><a href="#">comments (11)</a> | <a href="#">permalink</a> | <a href="#">e-mail this</a></span>
+        <span><a href="#">&lt;&lt; prev</a> | <a href="#">next &gt;&gt;</a></span>
+      </div>
+    </div>
+
+    <!-- POST 3 -->
+    <div class="blog-post">
+      <div class="post-header">
+        <span class="post-title">filming has OFFICIALLY begun + production diary day 1</span>
+        <span class="post-date">September 3, 2003 &mdash; 9:15 PM</span>
+      </div>
+      <div class="post-author">posted by: <a href="#">DarkDirectorMike</a> | category: <a href="#">Production Updates</a></div>
+      <div class="post-body">
+        <p>
+          WE ARE FILMING. I REPEAT. WE ARE FILMING.
+        </p>
+        <p>
+          after 8 months of pre-production, location scouting, casting, failed fundraising (thanks for NOTHING "uncle" dave), budget rewrites, a lead actor dropping out THREE DAYS before production (you know who you are), re-casting, more location scouting because the original diner burned down (unrelated to us), building the burger prop, and one incident with the health department that we are not allowed to discuss legally... we are ROLLING.
+        </p>
+        <p>
+          Day 1 we shot the opening sequence inside a real closed McDonald's in Barstow CA that a guy from Craigslist let us use for $200 and a case of pepsi. the fluorescent lighting in there is PERFECT. ray said and i quote: <i>"this place already looks like a crime scene."</i> he meant it as a compliment.
+        </p>
+        <p>
+          the burger showed up in a duffel bag. ray drove it from his apartment in Van Nuys. nobody asked questions.
+        </p>
+        <p>
+          full cast list posted on the cast page. check it out and leave some love in the guestbook for these guys, they're all working for nothing and they believe in this thing and that means everything.
+        </p>
+        <hr class="blood">
+        <p style="font-size:11px; color:#664444; text-align:center;">
+          <span class="animated-blood">☠ THIS SITE BEST EXPERIENCED WITH THE LIGHTS OFF ☠</span>
+        </p>
+      </div>
+      <div class="post-footer">
+        <span><a href="#">comments (34)</a> | <a href="#">permalink</a> | <a href="#">e-mail this</a></span>
+        <span><a href="#">&lt;&lt; prev</a> | <a href="#">next &gt;&gt;</a></span>
+      </div>
+      <div class="comments-section">
+        <div style="font-size:10px; color:#553333; margin-bottom:6px; font-family:'Special Elite',serif; text-transform:uppercase; letter-spacing:2px;">Comments (showing 3 of 34)</div>
+        <div class="comment">
+          <div class="comment-meta"><span class="username">NightmareNick</span> &mdash; Sep 3 2003, 9:41 PM</div>
+          <div class="comment-body">LETS GOOO!!! been following this project since the thing on IMDB. you guys deserve this. going to be legendary</div>
+        </div>
+        <div class="comment">
+          <div class="comment-meta"><span class="username">horror_mom_52</span> &mdash; Sep 4 2003, 8:17 AM</div>
+          <div class="comment-body">my son told me about this. i don't understand what a "black burger" is but i am proud of you young people making your art. good luck michael</div>
+        </div>
+        <div class="comment">
+          <div class="comment-meta"><span class="username">DarkDirectorMike</span> &mdash; Sep 4 2003, 9:03 AM</div>
+          <div class="comment-body">@horror_mom_52 thank you so much!! please do not watch this movie it will give you nightmares and i mean that respectfully</div>
+        </div>
+        <div style="font-size:10px; color:#553333; text-align:right;"><a href="#">view all 34 comments &gt;&gt;</a></div>
+      </div>
+    </div>
+
+    <!-- Archive link -->
+    <div style="text-align:center; margin: 8px 0 4px 0;">
+      <a href="#" style="font-size:12px; font-family:'Special Elite',serif; letter-spacing:2px; color:#664444;">&lt;&lt; OLDER POSTS / BLOG ARCHIVE &gt;&gt;</a>
+    </div>
+
+  </div><!-- /content-col -->
+
+
+  <!-- RIGHT SIDEBAR -->
+  <div id="right-col">
+
+    <div class="sidebar-box">
+      <div class="sidebar-box-title">&#x2665; LATEST BUZZ</div>
+      <div class="sidebar-box-content" style="font-size:11px;">
+        <span style="color:#ff6600;">"genuinely unsettling"</span><br>
+        <span style="color:#553333;">-- horror-underground.net</span>
+        <hr class="blood">
+        <span style="color:#ff6600;">"the burger is terrifying. i cannot explain why."</span><br>
+        <span style="color:#553333;">-- test screening attendee</span>
+        <hr class="blood">
+        <span style="color:#ff6600;">"what is wrong with these people"</span><br>
+        <span style="color:#553333;">-- Mike's mom</span>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-box-title">CAST</div>
+      <div class="sidebar-box-content" style="font-size:11px; color:#886666; line-height:1.9;">
+        <b style="color:#cc4400;">Jana Ferris</b><br>as Carrie<br>
+        <b style="color:#cc4400;">Derek Holme</b><br>as The Manager<br>
+        <b style="color:#cc4400;">Sasha Trent</b><br>as Kyle<br>
+        <b style="color:#cc4400;">Lou Padilla</b><br>as Dwayne<br>
+        <b style="color:#cc4400;">Reginald Cross</b><br>as The Customer<br>
+        <span style="font-size:10px; color:#553333;"><a href="#">full cast list &gt;&gt;</a></span>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-box-title">QUICK FACTS</div>
+      <div class="sidebar-box-content" style="font-size:11px; color:#886666; line-height:1.9;">
+        <b style="color:#884444;">Director:</b><br>Michael Torrance<br>
+        <b style="color:#884444;">Budget:</b><br>$18,000<br>
+        <b style="color:#884444;">Filmed:</b><br>Sept–Oct 2003<br>
+        <b style="color:#884444;">Location:</b><br>Barstow, CA<br>
+        <b style="color:#884444;">Runtime:</b><br>~84 min (est.)<br>
+        <b style="color:#884444;">Rating:</b><br>Unrated
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-box-title">GUESTBOOK</div>
+      <div class="sidebar-box-content">
+        <div class="guestbook-entry">
+          <span class="gb-name">FearFanatic</span> says:<br>
+          <span>"this is gonna be the scariest thing since Blair Witch i can feel it"</span>
+        </div>
+        <div class="guestbook-entry">
+          <span class="gb-name">CryptoHorror</span> says:<br>
+          <span>"what does the 67 mean?? its driving me crazy"</span>
+        </div>
+        <div class="guestbook-entry">
+          <span class="gb-name">TammyLee</span> says:<br>
+          <span>"found this site on a list of 'creepy websites' and now i cant sleep lol"</span>
+        </div>
+        <div style="margin-top:6px; text-align:center;">
+          <a href="#" style="font-size:11px; font-family:'Special Elite',serif;">[Sign the Guestbook]</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-box">
+      <div class="sidebar-box-title">WEB RINGS</div>
+      <div class="sidebar-box-content" style="font-size:10px; text-align:center; color:#664444; line-height:1.9;">
+        <a href="#">&lt;&lt; HorrorRing</a><br>
+        <a href="#">IndieFilm Ring &gt;&gt;</a><br>
+        <a href="#">« ScreamScene »</a><br>
+        <hr class="blood">
+        <a href="#" style="font-size:9px; color:#443333; display:block;">Add to Favorites</a>
+        <a href="#" style="font-size:9px; color:#443333; display:block;">Set as Homepage</a>
+      </div>
+    </div>
+
+    <div style="text-align:center; margin-top:4px;">
+      <span class="blink">&#9888; THIS SITE IS SCARY &#9888;</span>
+    </div>
+
+  </div><!-- /right-col -->
+
+</div><!-- /main-layout -->
+
+
+<!-- FOOTER -->
+<div id="footer">
+  <hr class="blood">
+  <span class="blink-slow" style="color:#330000;">✝ ✝ ✝</span>
+  &nbsp;&nbsp;
+  67 Black Burger &copy; 2003 Torrance/Holme Productions. All Rights Reserved.
+  &nbsp;&nbsp;
+  <span class="blink-slow" style="color:#330000;">✝ ✝ ✝</span>
+  <br><br>
+  <span style="color:#333333;">
+    Webmaster: <a href="mailto:blackburger67@hotmail.com">blackburger67@hotmail.com</a>
+    &nbsp;|&nbsp;
+    <a href="#">Disclaimer</a>
+    &nbsp;|&nbsp;
+    <a href="#">Privacy</a>
+    &nbsp;|&nbsp;
+    Site designed in Dreamweaver MX
+  </span>
+  <br><br>
+  <span style="font-size:9px; color:#222222;">
+    This website was designed for Internet Explorer 6.0 at 800x600 resolution. If things look weird that is your problem.
+    The creators of this website accept no responsibility for psychological damage sustained while browsing this site.
+    No burgers were harmed in the making of this film. (one burger was harmed.)
+  </span>
+</div>
+
+</td></tr>
+</table>
+
+</body>
+</html>
